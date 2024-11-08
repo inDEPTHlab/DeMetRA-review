@@ -1,2 +1,4 @@
 demetra_venv
+.DS_store
+__pycache__/
 .ipynb_checkpoints/
