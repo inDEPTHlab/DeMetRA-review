@@ -9,6 +9,8 @@ import definitions.layout_styles as styles
 results_directory = './assets/'
 data = pd.read_csv(f'{results_directory}clean_bib_metadata.csv', parse_dates=['Date'])
 
+data_subset = data[['Author', 'Year', 'Title', 'Journal', 'DOI',
+                    'Sample size', 'Category', 'Phenotype', 'Developmental period', 'Tissue', 'Array']]
 # ================
 
 
@@ -19,6 +21,10 @@ def _count_papers(d=data):
 
 def _count_mpss(d=data):
     return d.shape[0]
+
+def _count_phenotypes(d=data):
+    n = int(len(pd.unique(d['Phenotype'])))
+    return n
 
 
 # ================ PLOTTING ================

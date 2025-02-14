@@ -5,27 +5,38 @@ import faicons as fa
 from shinywidgets import output_widget, render_plotly
 
 import definitions.layout_styles as styles
-from definitions.backend_funcs import _count_papers, _multilevel_piechart, _sample_size_over_time, _category_over_years
+from definitions.backend_funcs import _count_papers, _count_mpss, _count_phenotypes, data_subset, \
+    _multilevel_piechart, _sample_size_over_time, _category_over_years
 
 app_ui = ui.page_fluid(
     ui.card(
-        ui.card_header("DeMetRA: Developmental Methylation Risk Atlas - literature review"),
-        ui.layout_sidebar(
-            ui.sidebar("Sidebar", bg="#f8f8f8"),
+        ui.page_navbar(
+            ui.nav_panel("Overview",
+                ui.layout_column_wrap(
+                    ui.value_box('', ui.output_text('paper_count'), 'papers',
+                                 showcase=fa.icon_svg('file-circle-check')),
+                    ui.value_box('', ui.output_text("mpss_count"), 'unique MPSs',
+                                 showcase=fa.icon_svg("dna")),
+                    ui.value_box('', ui.output_text("phenotype_count"), 'unique Phenotypes',
+                                 showcase=fa.icon_svg("stethoscope")),
 
-            ui.layout_column_wrap(
-                ui.value_box("Papers",
-                    ui.output_text('paper_count'), showcase=fa.icon_svg('file-circle-check')),
+                    fill=False),
+                ui.input_action_button("reset_filter_df", "Reset filters"),
+                ui.output_data_frame("litreview_df"),
 
-                    # ui.value_box(
-                    #     "unique MPS",
-                    #     ui.output_text("bill_length"),
-                    #     showcase=fa.icon_svg("ruler-horizontal")),
-                fill=False),
-            ui.card(output_widget('multilevel_piechart')),
-            ui.card(output_widget('sample_size_over_time')),
-            ui.card(output_widget('category_over_years')),
-        ),
+                ),
+
+            ui.nav_panel("MPSs by phenotype",
+                ui.card(output_widget('multilevel_piechart'))),
+
+            ui.nav_panel("Sample size over time",
+                ui.card(output_widget('sample_size_over_time'))),
+
+            ui.nav_panel("Phenotype categories over time",
+                ui.card(output_widget('category_over_years'))),
+
+            id="navbar", title="DeMetRA: literature review"
+        )
     )
 )
 
@@ -33,10 +44,31 @@ app_ui = ui.page_fluid(
 def server(input, output, session):
 
     @output
-    @render.ui
+    @render.text
     def paper_count():
         c = _count_papers()
-        return f'{c} papers'
+        return f'{c}'
+
+    @render.text
+    def mpss_count():
+        c = _count_mpss()
+        return f'{c}'
+
+    @render.text
+    def phenotype_count():
+        c = _count_phenotypes()
+        return f'{c}'
+
+    @render.data_frame
+    def litreview_df():
+        return render.DataTable(data_subset, filters=True)
+
+    @reactive.effect
+    @reactive.event(input.reset_filter_df)
+    async def _():
+        await litreview_df.update_filter(None)
+
+        # PLOTS TABS ============================================
 
     @render_plotly
     def multilevel_piechart():
