@@ -19,7 +19,7 @@ app_ui = ui.page_fluid(
                                  showcase=fa.icon_svg("dna")),
                     ui.value_box('', ui.output_text("phenotype_count"), 'unique Phenotypes',
                                  showcase=fa.icon_svg("stethoscope")),
-
+                    # col_widths=[-3, 3, 3, 3],            
                     fill=False),
                 ui.input_action_button("reset_filter_df", "Reset filters"),
                 ui.output_data_frame("litreview_df"),
