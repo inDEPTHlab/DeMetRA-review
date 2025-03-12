@@ -1,6 +1,10 @@
 import pandas as pd
+import pickle
+
+from shiny import ui
 
 import plotly.express as px
+import plotly.graph_objects as go
 import textwrap
 
 import definitions.layout_styles as styles
@@ -15,10 +19,16 @@ assets_directory = main_dir / 'assets'
 data = pd.read_csv(f'{assets_directory}/MPS_literature_cleaned.csv', parse_dates=['Date'])
 data['Sample size'] = pd.to_numeric(data['Sample_size_total'], errors='coerce')
 
-data_subset = data[['Author', 'Year', 'Title', 'Journal', 'DOI',
+data_subset = data[['Author', 'Year', 'Title', 
                     'Category', 'Phenotype', 'Developmental_period', 'Sample_size_total', 
-                    'Tissue', 'Array', 'Ancestry']]
-# ================
+                    'Tissue', 'Array', 'Ancestry', 'Journal', 'DOI']]
+# Clean some column names
+data_subset.rename(columns={'Sample_size_total': 'Sample size', 
+                            'Developmental_period': 'Developmental period'}, inplace=True)
+# Turn DOI into a clickable link
+data_subset['DOI'] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">{doi}</a>') for doi in data_subset['DOI']]
+
+# ==========================================
 
 
 def _count_papers(d=data):
@@ -28,6 +38,7 @@ def _count_papers(d=data):
 
 def _count_mpss(d=data):
     return d.shape[0]
+
 
 def _count_phenotypes(d=data):
     n = int(len(pd.unique(d['Phenotype'])))
@@ -106,3 +117,68 @@ def _multilevel_piechart(lvl1='Category', lvl2='Phenotype'):
                       title='Number of MPSs per phenotype')
 
     return fig
+
+
+def _publication_network():
+
+    # Read the graph object from file
+    with open(f'{assets_directory}/Publications_network.pkl', 'rb') as file:
+        G = pickle.load(file)
+
+    # Wrap text for hover info
+    def wrap_text(text, width=35):
+        return '<br>'.join(textwrap.wrap(text, width))
+
+    author_node_x = []
+    author_node_y = []
+    paper_node_x = []
+    paper_node_y = []
+
+    for node in G.nodes():
+        x, y = G.nodes[node]['pos']
+        if node.startswith('Author/'):
+            author_node_x.append(x)
+            author_node_y.append(y)
+        else:
+            paper_node_x.append(x)
+            paper_node_y.append(y)
+
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        x0, y0 = G.nodes[edge[0]]['pos']
+        x1, y1 = G.nodes[edge[1]]['pos']
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+
+    author_node_trace = go.Scatter(x=author_node_x, y=author_node_y, mode='markers',
+                                hoverinfo='text',
+                                marker=dict(size=5, line_width=0.3, color='skyblue'),
+                                text=[n.split('/')[-1] for n in G.nodes() if n.startswith('Author/')])
+
+    paper_node_trace = go.Scatter(x=paper_node_x, y=paper_node_y, mode='markers',
+                                hoverinfo='text',
+                                marker=dict(size=7, line_width=0, color='darkgreen'),
+                                text=[wrap_text(n.split('/')[-1]) for n in G.nodes() if n.startswith('Paper/')])
+
+    edge_trace = go.Scatter(x=edge_x, y=edge_y, mode='lines',
+                            hoverinfo='none',
+                            line=dict(width=0.4, color='grey'))
+
+    fig = go.Figure(data=[edge_trace, author_node_trace, paper_node_trace],
+                    layout=go.Layout(
+                        # title=dict(text="Publication network graph", font=dict(size=16)),
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=5,l=5,r=5,t=5),
+                        width=1300,
+                        height=900,
+                        plot_bgcolor='white',
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+
+    return fig
+
+
+    
+

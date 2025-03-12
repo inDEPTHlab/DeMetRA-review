@@ -69,14 +69,12 @@ COLOR_MAPS = {'Category': category_color_map,
               'Tissue': tissue_color_map,
               'Array': array_color_map}
 
-# BETA_COLORMAP = 'viridis'
-# CLUSTER_COLORMAP = 'turbo'
-#
-# OVLP_COLOR1 = '#88CCEE'  # light blue
-# OVLP_COLOR2 = '#DDCC77'  # yellow
-# OVLP_COLOR3 = '#CC6677'  # light red
-#
-# OVLP_COLORS = [OVLP_COLOR1, OVLP_COLOR2, OVLP_COLOR3]
+DATATABLE_STYLE = [
+    {'cols': ['Author'],
+     'style': {'width': '120px', 'max-width': '130px', 'min-width': '90px'}},
+    {'cols': ['Title'],
+     'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}}
+     ]
 
 
 
