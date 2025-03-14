@@ -1,10 +1,13 @@
 import pandas as pd
+import numpy as np
 import pickle
 
 from shiny import ui
 
 import plotly.express as px
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import networkx as nx
 import textwrap
 
 import definitions.layout_styles as styles
@@ -119,7 +122,48 @@ def _multilevel_piechart(lvl1='Category', lvl2='Phenotype'):
     return fig
 
 
-def _publication_network():
+def _publication_histogram(min_count=1, fig_width=1300, fig_height=500):
+
+    # Read the graph object from file
+    with open(f'{assets_directory}/Publications_network.pkl', 'rb') as file:
+        G = pickle.load(file)
+
+    # Convert to pandas dataframe
+    edges_df = nx.to_pandas_edgelist(G)
+
+    # Select Author nodes
+    edges_df = edges_df.loc[edges_df.source.str.startswith('Author'), ]
+
+    # Count publications per author
+    pub_count = edges_df.value_counts('source')
+    # print(len(pub_count), 'unique authors')
+
+    # Reduce to only those with more than one publication
+    pub_count_filtered = pub_count[pub_count > min_count].reset_index(drop=False)
+    # Clean up Author names
+    pub_count_filtered['Author'] = pub_count_filtered.source.apply(lambda x: x.split('/')[-1])
+
+    # Plot
+    fig = px.histogram(pub_count_filtered, x="Author", y='count')
+
+    fig.update_layout(
+        title='Number of publications per author (if > 1)',
+        width=fig_width,
+        height=fig_height,
+        xaxis_title='Author',
+        yaxis_title='Number of publications',
+        showlegend=False
+    )
+    # Rotate x-tick labels 65 degrees and ensure all labels are shown
+    fig.update_xaxes(tickangle=65, tickmode='linear')
+
+    # Update hover template
+    fig.update_traces(hovertemplate='Author: <b>%{x}</b><br>Publication count: %{y}')
+
+    return fig
+
+    
+def _publication_network(fig_width=1300, fig_height=900):
 
     # Read the graph object from file
     with open(f'{assets_directory}/Publications_network.pkl', 'rb') as file:
@@ -171,14 +215,210 @@ def _publication_network():
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=5,l=5,r=5,t=5),
-                        width=1300,
-                        height=900,
+                        width=fig_width,
+                        height=fig_height,
                         plot_bgcolor='white',
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
     return fig
 
+d = pd.read_csv(f'{assets_directory}/MPS_base_target.csv')
 
+def sankey(ax, var, left_labels, right_labels, d=d, left='targ', right='base',
+           title_left='Target', title_right='Base', spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
     
+    counts = pd.DataFrame(d[[f'{var}_{left}',f'{var}_{right}']].value_counts(dropna=False)).reset_index()
+    
+    total = counts['count'].sum()
+    
+    def size_esimator(label_dict, side):
+    
+        size_list = list()
+        
+        for label in label_dict.keys():
+            label_count = int(counts.loc[counts[f'{var}_{side}']==label, 'count'].sum())
+            label_dict[label]['size'] = label_count
+            size_list.append(label_count)
+    
+        cumulative_sum = np.cumsum(size_list).tolist()
+        
+        top_pos = [0] + [c+(spacer*(i+1))for i,c in enumerate(cumulative_sum[:-1])]
+        bottom_pos = [c+(spacer*(i))for i,c in enumerate(cumulative_sum)]
+    
+        for i, label in enumerate(label_dict.keys()):
+            label_dict[label]['top'] = top_pos[i]
+            label_dict[label]['bottom'] = bottom_pos[i]
+        
+        return label_dict
+    
+    left_dict = size_esimator(left_labels, side=left)
+    right_dict = size_esimator(right_labels, side=right)
+    
+    def label_y(label_dict, label):
+        if label_dict[label]['size'] > spacer:
+            y = label_dict[label]['top']+1
+            va='top'
+        else:
+            y = label_dict[label]['top'] + label_dict[label]['size']*0.5
+            va='center'
+
+        string_spacer = '\n' if label_dict[label]['size'] > 5 else ' '
+        percent_count = round(label_dict[label]['size'] / total * 100)
+        percent_count = percent_count if percent_count > 0 else '<1'
+        
+        s = f"{label}{string_spacer}({percent_count}%)"
+        
+        return dict(y=y, s=s, va=va)
+        
+    # Draw left counts
+    for label in left_dict.keys():
+        ax.fill_between(x=[0, 1], y1=left_dict[label]['top'], y2=left_dict[label]['bottom'], 
+                        color=left_dict[label]['color'], edgecolor=None)
+        ax.text(x=-0.1, **label_y(left_dict, label), ha='right', fontsize=fss['sm'])
+    
+    # Draw right counts
+    for label in right_dict.keys():
+        ax.fill_between(x=[9, 10], y1=right_dict[label]['top'], y2=right_dict[label]['bottom'], 
+                        color=right_dict[label]['color'], alpha=1, edgecolor=None)
+        ax.text(x=10.1, **label_y(right_dict, label), ha='left', fontsize=fss['sm'])
+
+    # Add titles on each side
+    titlespecs = dict(y=-10, va='center',ha='center', fontweight='bold', fontsize=fss['l'])
+    ax.text(x=0.5, s=title_left, **titlespecs)
+    ax.text(x=9.5, s=title_right, **titlespecs)
+    
+    # Draw strips 
+    for left_label in left_dict.keys():
+        
+        for right_label in right_dict.keys():
+            
+            strip_color = left_dict[left_label]['color'] # Color strip according to the left side
+            
+            strip_size = counts.loc[(counts[f'{var}_{left}']==left_label) & (counts[f'{var}_{right}']==right_label), 'count']
+    
+            
+            if  len(strip_size) > 0:
+                strip_size = int(strip_size.iloc[0])
+    
+                # Create array of y values for each strip, half at left value, half at right, convolve
+                ys_d = np.array(50 * [left_dict[left_label]['top']] + 50 * [right_dict[right_label]['top']])
+                ys_d = np.convolve(ys_d, 0.05 * np.ones(20), mode='valid')
+                ys_d = np.convolve(ys_d, 0.05 * np.ones(20), mode='valid')
+                
+                ys_u = np.array(50 * [left_dict[left_label]['top'] + strip_size] + 50 * [right_dict[right_label]['top'] + strip_size])
+                ys_u = np.convolve(ys_u, 0.05 * np.ones(20), mode='valid')
+                ys_u = np.convolve(ys_u, 0.05 * np.ones(20), mode='valid')
+    
+                # Update bottom edges at each label so next strip starts at the right place
+                left_dict[left_label]['top'] += strip_size
+                right_dict[right_label]['top'] += strip_size
+                
+                ax.fill_between(np.linspace(1, 9, len(ys_d)), ys_d, ys_u, alpha=0.4, color=strip_color, edgecolor=None)
+    
+    largest_count = max(left_dict[list(left_dict.keys())[-1]]['bottom'], right_dict[list(right_dict.keys())[-1]]['bottom'])
+    ax.set_xlim(-0.1, 10.1)
+    ax.set_ylim(-10, largest_count+10)
+    ax.invert_yaxis()
+    ax.axis('off')
+
+    # Add superior title
+    ax.set_title(' '.join(var.split('_')), fontweight='bold', fontsize=fss['xl'], pad=25)
+    
+    # Also return overall overla 
+    color_counts = counts.copy()
+    color_counts[f'{var}_{left}'] = [left_labels[i]['color'] for i in counts[f'{var}_{left}']]
+    color_counts[f'{var}_{right}'] = [right_labels[i]['color'] for i in counts[f'{var}_{right}']]
+    
+    match = int(color_counts.loc[(color_counts[f'{var}_{left}'] == color_counts[f'{var}_{right}']) & (color_counts[f'{var}_{left}'] != 'grey'), 
+                'count'].sum())
+    match_percent = match / total * 100
+
+    return match_percent
+
+
+def display_match(ax, match, fs=22): 
+    ax.text(x=.5, y=.95, s=f'Match: {round(match)}%',fontsize=fs, ha='center', va='center', transform=ax.transAxes)
+    ax.axis('off')
+
+
+def _target_base_sankey(fig_width=100, fig_height=150):
+
+    fss={'sm': 10, 'l': 11, 'xl': 21}
+    
+    fig, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(fig_height, fig_width),
+                                  height_ratios=[1,.2, 1,.2], gridspec_kw=dict(hspace=0, wspace=0.7))
+   
+    a = sankey(axs['A'], var='Array', 
+            left_labels = {'450K': {'color': 'darkgreen'}, 
+                        'EPICv1': {'color': 'mediumpurple'},
+                        'Multiple (450K, EPICv1)': {'color': 'orange'},
+                        'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': {'color': 'orange'},
+                        'Multiple (450K, EPICv2)': {'color': 'orange'}},
+            right_labels = {'450K': {'color': 'darkgreen'}, 
+                        'EPICv1': {'color': 'mediumpurple'}, 
+                        'Multiple (450K, EPICv1)': {'color': 'orange'}}, fss=fss)
+
+    display_match(axs['a'], a)
+
+    b = sankey(axs['B'], var='Tissue',
+            left_labels = {'Peripheral blood': {'color':'crimson'},
+                            'Whole blood': {'color':'crimson'},
+                            'Dried bloodspot': {'color':'crimson'},
+                            'Blood-clots': {'color':'crimson'},
+                            'Cord blood': {'color':'darkred'},
+                            'Saliva': {'color':'lightblue'},
+                            'Buccal cells': {'color':'teal'},
+                            'Tumour cells': {'color':'orange'},
+                            'Not reported': {'color':'grey'}}, 
+            right_labels = {'Peripheral blood': {'color':'crimson'},
+                            'Whole blood': {'color':'crimson'},
+                            'Cord blood': {'color':'darkred'},
+                            'Multiple (Cord blood, Dried bloodspot)': {'color':'crimson'},
+                            'Multiple (Cord blood, Whole blood)': {'color':'crimson'},
+                            'Multiple (Whole blood, HPCs)': {'color':'crimson'},
+                            'Leukocytes': {'color':'mediumpurple'},
+                            'Tumour cells': {'color':'orange'}}, fss=fss)
+
+    display_match(axs['b'], b, fs=fss['l'])
+
+    c = sankey(axs['C'], var='Ancestry',
+            left_labels = {'White': {'color':'pink'}, 
+                            'European': {'color':'pink'}, 
+                            'Mixed': {'color':'purple'}, 
+                            'Hispanic': {'color': 'orange'},
+                            'African': {'color':'crimson'},
+                            'Not reported': {'color': 'grey'}}, 
+            right_labels = {'White': {'color':'pink'},
+                            'European': {'color':'pink'},
+                            'Mixed': {'color':'purple'}, 
+                            'Hispanic': {'color': 'orange'},
+                            'Not reported': {'color':'grey'}}, fss=fss)
+
+    display_match(axs['c'], c, fs=fss['l'])
+
+
+    dp = sankey(axs['D'], var='Developmental_period',
+            left_labels = {'Birth': {'color':'darkblue'}, 
+                'Very early childhood': {'color':'#4132d4'}, 
+                'Mid childhood': {'color':'#7566ff'}, 
+                'Late childhood': {'color':'#beb7ff'}, 
+                'Childhood and adolescence': {'color':'#f0cdff'}, 
+                'Adolescence': {'color':'purple'}},
+            right_labels = {'Birth': {'color':'darkblue'}, 
+                    'Mid childhood': {'color':'#7566ff'}, 
+                    'Late childhood': {'color':'#beb7ff'}, 
+                    'Childhood': {'color':'blue'},
+                    'Childhood and adolescence': {'color':'#f0cdff'}, 
+                    'Birth, Childhood and adolescence': {'color':'#7b07d0'},
+                    'Adolescence': {'color':'purple'},
+                    'Adults':{'color':'teal'},
+                    'Not reported': {'color':'grey'}}, fss=fss)
+
+    display_match(axs['d'], dp, fs=fss['l'])
+
+    return fig
+
+
+        
 
