@@ -2,11 +2,9 @@
 PAGE_PADDING = 'padding-top: 50px; padding-right: 50px; padding-bottom: 50px; padding-left: 50px'
 PAGE_GAP = '20px'
 
-SELECTION_PANE = 'padding-top: 10px; padding-right: 20px; padding-left: 20px; ' \
-                 'border-radius: 35px; ' \
-                 'background-color: #DCE3F0'  # light grey
-
 INFO_MESSAGE = 'text-align: center; padding-top: 10px; padding-bottom: 10px'
+
+NAVBAR_STYLE = "background-color: #4a235a; color: white;"  # Dark purple, you can change this to any color
 
 # ------ PLOTTING ------------
 # Specify colors to use for categorical variables
@@ -32,7 +30,7 @@ category_color_map = {'Biological markers': 'royalblue',
                       'Genetic syndromes': 'teal',
                       'Lifestyle and environment': 'gold',
                       'Physical health indicators': 'pink',
-                      'PsychiNeuro-psychiatric health indicators': 'darkviolet',
+                      'Neuro-psychiatric health indicators': 'darkviolet',
                       'Cancer': 'firebrick'}
 
 # tissue_color_map = {'Peripheral blood': 'crimson',
@@ -76,5 +74,7 @@ DATATABLE_STYLE = [
      'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}}
      ]
 
-
+SELECTION_PANE = 'padding-top: 15px; padding-bottom: 15px; padding-right: 25px; padding-left: 25px; ' \
+                 'border-radius: 15px; ' \
+                 'background-color: #efe7f6'  # light pink
 

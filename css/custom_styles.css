@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
+/* Set up color scheme */
+:root {
+    --demetra-purple: #4b61ef;
+    --demetra-darkblue: #001078;
+    --demetra-lightpink: #f9ebff;
+
+    --Category-Biological_markers: #113ab7;
+    --Category-Genetic_syndromes: #008080;
+    --Category-Lifestyle_and_environment: #ffd000;
+    --Category-Physical_health_indicators: #fc9ead;
+    --Category-Neuro-psychiatric_health_indicators: #7e04b3;
+    --Category-Cancer: #a21414;
+
+    --light-Category-Biological_markers: #dbe4ff;
+    --light-Category-Genetic_syndromes: #deffe6;
+    --light-Category-Lifestyle_and_environment: #fbf5d6;
+    --light-Category-Physical_health_indicators: #ffe4e8;
+    --light-Category-Neuro-psychiatric_health_indicators: #decfe4;
+    --light-Category-Cancer: #e4bebe;
+
+}
+
+/* Style main navigation bar */
+.navbar {
+    background-color: var(--demetra-purple) !important;
+}
+
+.navbar-brand {
+    color: white !important;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.nav-link {
+    color: white !important;
+    font-size: 14px;
+}
+
+/* Style slider */
+
+.irs--shiny .irs-bar, .irs-handle {
+    background: var(--demetra-darkblue) !important;
+}
+.irs-from, .irs-to, .irs-single {
+    background-color: var(--demetra-purple) !important;
+}
+
+/* Style checkboxes */
+.shiny-input-container .checkbox input[type="checkbox"] {
+    border: 1px solid var(--demetra-purple);
+    margin-left: 7px;
+}
+.shiny-input-container .checkbox input[type="checkbox"]:checked {
+    background-color: var(--demetra-purple);
+}
+
+
+/* Style text */
+
+body {
+    font-family: "Rubik", sans-serif;
+}
+
+/* h6 {
+    font-weight: 600;
+    color: var(--demetra-darkblue);
+} */
+
+/* Style buttons */

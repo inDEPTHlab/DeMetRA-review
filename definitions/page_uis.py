@@ -3,25 +3,90 @@ import faicons as fa
 
 from shinywidgets import output_widget
 
-def overview_page():
+from definitions.backend_funcs import data_subset
+import definitions.layout_styles as style
+
+
+def add_value_box(value, label, icon):
+    _label = ui.markdown(label+"<br>")
+    _width = '0.8em' if icon != 'dna' else '0.5em'
+    _height = '0.7em' if icon != 'dna' else '0.7em'
+
+    return ui.value_box('', ui.output_text(value), _label,
+                        showcase=fa.icon_svg(icon, width=_width, height=_height,
+                                             margin_right='0.1em'),
+                        showcase_layout="top right",
+                        style='display: flex; padding-bottom: 2px; padding-top: 5px; margin-right: 2px;',
+                        max_height='120px')
+
+def var_selector(page_id, variable, title=None):
+    _options = [f for f in data_subset[variable].unique()]
+    title = variable if not title else title
+    variable_id = variable.lower().replace(' ', '')
+
+    return ui.input_selectize(id=f'{page_id}_selected_{variable_id}',
+                              label=ui.h6(title, style='font-weight: bold;'),
+                              choices=_options,
+                              selected=[],
+                              multiple=True,
+                              width='95%')
+
+def var_slider(page_id, variable, title=None):
+    _min = int(data_subset[variable].min())
+    _max = int(data_subset[variable].max())
+
+    title = variable if not title else title
+
+    variable_id = variable.lower().replace(' ', '')
+    return ui.input_slider(id=f"{page_id}_selected_{variable_id}",
+                           label=ui.h6(title, style='font-weight: bold;'), 
+                           min=_min, max=_max, value=[_min, _max],
+                           width='90%',
+                           sep="")
+
+def var_checkbox(page_id, variable, title=None):
+    
+    if variable == "Based on":
+        _options = ['Only phenotype', 'EWAS summary statistics', 'Validated MPS algorithm']
+    else:
+        _options = [f for f in data_subset[variable].unique()]
+
+    title = variable if not title else title
+    variable_id = variable.lower().replace(' ', '')
+
+    return ui.input_checkbox_group(id=f'{page_id}_{variable_id}',
+                                   label=ui.h6(title, style='font-weight: bold;'),
+                                   choices=_options,
+                                   selected=_options)
+
+
+def overview_page(page_id='overview_page'):
     return ui.nav_panel("Overview",
-                        ui.markdown("Welcome, here you can find an overview of the literature review data.<br>" \
-                                    "You can filter the data by clicking on the column headers.<br>" \
-                                    "You can also reset the filters by clicking the button below."),
-
-                        ui.layout_column_wrap(
-                            ui.value_box('', ui.output_text('paper_count'), 'publications',
-                                         showcase=fa.icon_svg('file-circle-check')),
-                            ui.value_box('', ui.output_text("mpss_count"), 'unique MPSs',
-                                            showcase=fa.icon_svg("dna")),
-                            ui.value_box('', ui.output_text("phenotype_count"), 'unique Phenotypes',
-                                            showcase=fa.icon_svg("stethoscope")),
-                            ui.value_box('Last update:', '14/02/2025',
-                                            showcase=fa.icon_svg("arrow-rotate-right")),
-                            fill=False),
-
-                        ui.input_action_button("reset_filter_df", "Reset filters"),
-                        ui.output_data_frame("litreview_df")
+                        ui.layout_columns(
+                            ui.markdown(
+                                "Welcome!<br> Here you can explore the data related to our literature review: "\
+                                "***Development and application of methylation profile scores in pediatric research: "\
+                                "A systematic review and primer*** [DOI](todo).<br>" \
+                                "On this page, you can search and filter the literature table.<br>"),
+                            add_value_box('paper_count', 'publications', 'file-circle-check'),
+                            add_value_box('mpss_count', 'unique MPSs', 'dna'),
+                            add_value_box('phenotype_count', 'unique Phenotypes', 'stethoscope'),
+                            ui.value_box('Last update:', ui.span('14/02/2025', style='font-size: 26px'),
+                                         showcase=fa.icon_svg("arrow-rotate-right", width='0.5em', height='0.7em'),
+                                         showcase_layout="top right",
+                                         max_height='120px'),
+                            col_widths = [4, 2, 2, 2, 2]),
+                         ui.layout_columns(
+                             var_selector(page_id, "Category"),
+                             var_selector(page_id, "Phenotype"),
+                             var_selector(page_id, "Developmental period"),
+                             var_slider(page_id, "Year", "Publication year"), 
+                             var_checkbox(page_id, "Based on"),
+                             col_widths=(3, 3, 2, 2, 2),
+                             gap='10px',
+                             style=style.SELECTION_PANE),
+                        
+                        ui.output_data_frame("overview_page_table")
                         )
 
 def phenotypes_page():

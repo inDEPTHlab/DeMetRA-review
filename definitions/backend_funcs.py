@@ -20,16 +20,21 @@ main_dir = Path(__file__).parent.parent
 assets_directory = main_dir / 'assets'
 
 data = pd.read_csv(f'{assets_directory}/MPS_literature_cleaned.csv', parse_dates=['Date'])
+
 data['Sample size'] = pd.to_numeric(data['Sample_size_total'], errors='coerce')
 
-data_subset = data[['Author', 'Year', 'Title', 
-                    'Category', 'Phenotype', 'Developmental_period', 'Sample_size_total', 
-                    'Tissue', 'Array', 'Ancestry', 'Journal', 'DOI']]
-# Clean some column names
-data_subset.rename(columns={'Sample_size_total': 'Sample size', 
-                            'Developmental_period': 'Developmental period'}, inplace=True)
+data_subset = data[['Category', 'Phenotype', 'Developmental_period', 'What_is_available', 
+                    'Author', 'Year', 'Title', 'DOI', 'Sample_size_total', 
+                    'Tissue', 'Array', 'Ancestry']]
 # Turn DOI into a clickable link
-data_subset['DOI'] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">{doi}</a>') for doi in data_subset['DOI']]
+data_subset['DOI'] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in data_subset['DOI']]
+
+# Clean some column names for display
+data_subset.rename(columns={'Sample_size_total': 'Sample size', 
+                            'Developmental_period': 'Developmental period',
+                            'DOI': 'URL',
+                            'What_is_available': 'Based on'}, inplace=True)
+
 
 # ==========================================
 
@@ -47,6 +52,54 @@ def _count_phenotypes(d=data):
     n = int(len(pd.unique(d['Phenotype'])))
     return n
 
+# =============== FILTERING ================
+
+def _filter_litreview_table(selected_category, selected_phenotype, selected_period,
+                            selected_year_range, based_on_filter):
+    
+    table = data_subset.copy()
+
+    if len(selected_category) > 0:
+        table = table.loc[table['Category'].str.contains('|'.join(list(selected_category)), na=False, regex=True), ]
+
+    if len(selected_phenotype) > 0:
+        table = table.loc[table['Phenotype'].str.contains('|'.join(list(selected_phenotype)), na=False, regex=True), ]
+
+    if len(selected_period) > 0:
+        table = table.loc[table['Developmental period'].str.contains('|'.join(list(selected_period)), na=False, regex=True), ]
+
+    if (selected_year_range[0] > table['Year'].min()) or (selected_year_range[1] < table['Year'].max()):
+        table = table.loc[(table['Year'] >= selected_year_range[0]) & (table['Year'] <= selected_year_range[1]), ]
+
+    if len(based_on_filter) < 3: 
+        table = table.loc[table['Based on'].str.contains('|'.join(list(based_on_filter)), na=False, regex=True), ]
+    
+    table_style = _style_litreview_table(table.reset_index())
+
+    return table, table_style
+
+
+def _style_litreview_table(table):
+    
+    table_style = [
+        {'cols': ['Category', 'Phenotype', 'Author'],
+        'style': {'width': '130px', 'max-width': '130px', 'min-width': '100px'}},
+        {'cols': ['Title'],
+        'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}},
+        {'cols': ['URL'],
+        'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px'}},
+
+        ]
+    
+    for cat in table['Category'].unique():
+        fetch_color = f'var(--light-Category-{cat.replace(" ", "_")})'
+
+        row_color = {'rows': table.index[table['Category'] == cat].tolist(),
+                     'style': {'background-color': fetch_color}}
+        table_style.append(row_color)
+    
+    
+    return table_style
 
 # ================ PLOTTING ================
 
