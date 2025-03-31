@@ -52,7 +52,7 @@ def _count_phenotypes(d=data):
     n = int(len(pd.unique(d['Phenotype'])))
     return n
 
-# =============== FILTERING ================
+# =============== FILTERING & STYLING TABLES ================
 
 def _filter_litreview_table(selected_category, selected_phenotype, selected_period,
                             selected_year_range, based_on_filter):
@@ -137,7 +137,46 @@ def _sample_size_over_time(data=data, color_by='Category',
     return fig
 
 
-def _category_over_years(data=data, color_by='Category', percent=True, width=1300, height=400):
+def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
+                         fig_width=1300, fig_height=800):
+    """
+        Multilevel pie chart of Category | Phenotypes
+    """
+
+    counts = data[[lvl1, lvl2]].value_counts().reset_index()
+
+    # Count publications
+    unique_papers = data.groupby(lvl2)['Title'].nunique().reset_index()
+    counts = counts.merge(unique_papers, on=lvl2, how='left')
+
+    counts['hover_label'] = counts.apply(
+        lambda row: f"<b>{row[lvl2]}</b>"\
+                    f"<br>Unique MPSs: {row['count']}"\
+                    f"<br>Unique publications: {row['Title']}"\
+                    f"<br>Category: {row[lvl1]}", axis=1
+    )
+
+    # Color set-up
+    if color_by in styles.COLOR_MAPS.keys():
+        color_map = styles.COLOR_MAPS[color_by]
+    else:
+        color_map = "Virdis"
+    
+    fig = px.sunburst(counts,
+                      path=[lvl1, lvl2], values='count',
+                      hover_data={'hover_label': True},
+                      color = lvl1, color_discrete_map = color_map,
+                      width=fig_width, height=fig_height,
+                      title='')
+
+    fig.update_traces(hovertemplate='%{customdata[0]}')
+
+    return fig
+
+
+def _category_over_years(data=data, color_by='Category', 
+                         fig_width=1300, fig_height=500,
+                         percent=True):
     """
        Histogram of counts (y axis) vs. publication year (x axis)
     """
@@ -151,29 +190,10 @@ def _category_over_years(data=data, color_by='Category', percent=True, width=130
 
     fig = px.histogram(data, x='Year', color=color_by, barnorm=norm,
                        color_discrete_map=color_map,
-                       title=f'{color_by} over time', width=width, height=height)
+                       title='', 
+                       width=fig_width, height=fig_height)
 
     return fig
-
-def _multilevel_piechart(lvl1='Category', lvl2='Phenotype'):
-
-    counts = data[[lvl1, lvl2]].value_counts().reset_index()
-
-    # Color set-up
-    color_by = lvl1
-    if color_by in styles.COLOR_MAPS.keys():
-        color_map = styles.COLOR_MAPS[color_by]
-    else:
-        color_map = 'Virdis'
-
-    fig = px.sunburst(counts,
-                      path=[lvl1, lvl2], values='count',
-                      color = color_by, color_discrete_map = color_map,
-                      width=1200, height=750,
-                      title='Number of MPSs per phenotype')
-
-    return fig
-
 
 def _publication_histogram(min_count=1, fig_width=1300, fig_height=500):
 

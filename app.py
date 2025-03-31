@@ -69,13 +69,18 @@ def server(input, output, session):
                                 width='100%',
                                 styles=table_style)
     
-    # @reactive.effect
-    # @reactive.event(input.reset_filter_df)
-    # async def _():
-    #     await litreview_df.update_filter(None)
-
     # ================= Categories piechart page ==================
 
+    @render_plotly
+    def multilevel_piechart():
+        p = _multilevel_piechart()
+        return p
+    
+    @render_plotly
+    def category_over_years():
+        p = _category_over_years()
+        return p
+    
     # ================= Publication network page ==================
     @render_plotly
     def publication_histogram():
@@ -87,25 +92,21 @@ def server(input, output, session):
         p = _publication_network()
         return p
     
-    @render_plotly
-    def multilevel_piechart():
-        p = _multilevel_piechart()
-        return p
-
-    @render_plotly
-    def sample_size_over_time():
-        p = _sample_size_over_time()
-        return p
+    # =================== Target vs. base page ====================
     
     @render.plot(width=1300, height=1400)
     def sankey_target_base():
         p = _target_base_sankey()
         return p
     
+    # ================ Sample size over time page =================
+    
     @render_plotly
-    def category_over_years():
-        p = _category_over_years()
+    def sample_size_over_time():
+        p = _sample_size_over_time()
         return p
+    
+    
 
 
 app = App(app_ui, server)

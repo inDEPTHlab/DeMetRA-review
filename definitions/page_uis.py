@@ -76,6 +76,9 @@ def overview_page(page_id='overview_page'):
                                          showcase_layout="top right",
                                          max_height='120px'),
                             col_widths = [4, 2, 2, 2, 2]),
+                         ui.markdown("Use the selection pane below to filter the data. Rows in the table are colored "\
+                                     "based on the *Category* assigned to the corresponding MPS. Navigate to the other "\
+                                     "tabs for interactive visualizations of these data."),
                          ui.layout_columns(
                              var_selector(page_id, "Category"),
                              var_selector(page_id, "Phenotype"),
@@ -86,17 +89,24 @@ def overview_page(page_id='overview_page'):
                              gap='10px',
                              style=style.SELECTION_PANE),
                         
-                        ui.output_data_frame("overview_page_table")
+                        ui.output_data_frame("overview_page_table"),
                         )
 
-def phenotypes_page():
+def phenotypes_page(page_id='phenotype_page'):
     return ui.nav_panel("Explore phenotypes",
-                        ui.markdown("Here you can explore the distribution of phenotypes across the literature review.<br>" \
-                                    "In the multilevel pie chart, click on one of the inner categories to select it. <br>"),
-                        output_widget('multilevel_piechart'),
-                         ui.markdown("The stacked histogram below show the interest in different phenotype categories over " \
-                                     "the years.<br>"),
-                        output_widget('category_over_years')),
+                        ui.markdown("In just a moment, you will see a couple of ways to visualize the distribution "\
+                                    "of phenotypes across the literature review."),
+                        ui.navset_card_underline(
+                            ui.nav_panel("Category | Phenotype pie chart", 
+                                         ui.markdown("In the multilevel pie chart below, you can see the number of MPSs per "\
+                                                     "` Category | Pehnotype `. Hover over the slices to get more information. "\
+                                                     "Click on one of the *inner* macro-categories to zoom into its phenotypes."),
+                                                     output_widget('multilevel_piechart')),
+                            ui.nav_panel("Categories over time", 
+                                         ui.markdown("The stacked histogram below shows the interest in different phenotype categories over " \
+                                                     "the years."),
+                                                     output_widget('category_over_years'))
+                        ))
 
 def publications_page():
     return ui.nav_panel("Publications / Author network",

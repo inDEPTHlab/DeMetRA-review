@@ -16,37 +16,13 @@ array_color_map = {'EPICv1': 'mediumpurple',
                    'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': 'orange',
                    'WGBS': 'magenta'}
 
-# category_color_map = {'Syndrome': 'royalblue',
-#                       'Disease': 'firebrick',
-#                       'Protein': 'darkviolet',
-#                       'Lifestyle': 'gold',
-#                       'Psychiatric': 'teal',
-#                       'Environmental exposure': 'limegreen',
-#                       'Birth outcome': 'lightblue',
-#                       'Tumour': 'pink',
-#                       'Aging phenotype': 'darkgrey'}
-
-category_color_map = {'Biological markers': 'royalblue',
-                      'Genetic syndromes': 'teal',
-                      'Lifestyle and environment': 'gold',
-                      'Physical health indicators': 'pink',
-                      'Neuro-psychiatric health indicators': 'darkviolet',
-                      'Cancer': 'firebrick'}
-
-# tissue_color_map = {'Peripheral blood': 'crimson',
-                    # 'Whole blood': 'gold',
-                    # 'Cord blood': 'brown',
-                    # 'Placenta': 'pink',
-                    # 'Blood-clots': 'blueviolet',
-                    # 'Dried bloodspot': 'indianred',
-                    # 'Saliva': 'lightblue',
-                    # 'Buccal cells': 'steelblue',
-                    # 'Nasal epithelial cells': 'teal',
-                    # 'Tumour cells': 'darkgreen',
-                    # 'Leukocytes': 'yellow',
-                    # 'Leukocytes': 'yellow',
-                    # 'Bone marrow granulocytes': 'magenta',
-                    # 'Not reported': 'darkgrey'}
+# TODO: read colors directly from CSS file
+category_color_map = {'Biological markers': '#113ab7',
+                     'Genetic syndromes': '#008080',
+                     'Lifestyle and environment': '#ffd000',
+                     'Physical health indicators': '#fc9ead',
+                     'Neuro-psychiatric health indicators': '#7e04b3',
+                     'Cancer': '#a21414'}
 
 tissue_color_map = {'Peripheral blood': 'crimson',
                     'Whole blood': 'crimson',
@@ -66,13 +42,6 @@ tissue_color_map = {'Peripheral blood': 'crimson',
 COLOR_MAPS = {'Category': category_color_map,
               'Tissue': tissue_color_map,
               'Array': array_color_map}
-
-DATATABLE_STYLE = [
-    {'cols': ['Author'],
-     'style': {'width': '120px', 'max-width': '130px', 'min-width': '90px'}},
-    {'cols': ['Title'],
-     'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}}
-     ]
 
 SELECTION_PANE = 'padding-top: 15px; padding-bottom: 15px; padding-right: 25px; padding-left: 25px; ' \
                  'border-radius: 15px; ' \
