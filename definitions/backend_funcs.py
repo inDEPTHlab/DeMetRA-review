@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import networkx as nx
+import ast 
 import textwrap
 
 import definitions.layout_styles as styles
@@ -104,39 +105,6 @@ def _style_litreview_table(table):
 # ================ PLOTTING ================
 
 
-def _sample_size_over_time(data=data, color_by='Category', 
-                           log_sample_size=True, model_type="ols", scope="overall"):
-    """
-    Scatterplot of sample size (y axis) vs. publication date (x axis)
-    """
-    # Color set-up
-    if color_by in styles.COLOR_MAPS.keys():
-        color_map = styles.COLOR_MAPS[color_by]
-    else:
-        color_map = 'Virdis'
-
-    line_color = 'grey' if scope == 'overall' else None
-    model_options = dict(log_y=log_sample_size) if model_type == "ols" else dict(frac=1)
-
-    # Plot
-    fig = px.scatter(data, x='Date', y='Sample size', log_y=log_sample_size,
-                     color=color_by, color_discrete_map=color_map,
-                     hover_name=data.Title.apply(lambda t: "<br>".join(textwrap.wrap(t, width=80))),
-                     hover_data='Phenotype',
-                     trendline=model_type, trendline_scope=scope, trendline_color_override=line_color,
-                     trendline_options=model_options,
-                     title='Sample size over time')
-    # Make it pretty
-    fig.update_traces(marker=dict(size=10, opacity=.5))
-    axes_style = dict(mirror=True, ticks='outside', showline=True, linecolor='black', gridcolor='lightgrey')
-    ylabel_note = ' (log scale)' if log_sample_size else ''
-    fig.update_yaxes(title_text=f'<b>Sample size</b>{ylabel_note}', **axes_style)
-    fig.update_xaxes(title_text='Publication date', **axes_style)
-    fig.update_layout(plot_bgcolor='whitesmoke', width=1300, height=400, margin=dict(l=10, r=10, t=25, b=10))
-
-    return fig
-
-
 def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
                          fig_width=1300, fig_height=800):
     """
@@ -175,7 +143,7 @@ def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
 
 
 def _category_over_years(data=data, color_by='Category', 
-                         fig_width=1300, fig_height=500,
+                         fig_width=1300, fig_height=450,
                          percent=True):
     """
        Histogram of counts (y axis) vs. publication year (x axis)
@@ -195,40 +163,63 @@ def _category_over_years(data=data, color_by='Category',
 
     return fig
 
-def _publication_histogram(min_count=1, fig_width=1300, fig_height=500):
+def _publication_histogram(min_count=1, fig_width=1700, fig_height=350):
 
-    # Read the graph object from file
-    with open(f'{assets_directory}/Publications_network.pkl', 'rb') as file:
-        G = pickle.load(file)
+    # Group by publication to extract publication category
+    pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
+    pub_category['Publication category'] = [p[0] if len(set(p)) == 1 else 'Mixed' for p in pub_category['Category']]
+    
+    # Match with authors
+    pub_authors = data.groupby("Title")['Author_list'].first().reset_index()
+    pubs = pd.merge(pub_category.drop('Category', axis=1), pub_authors, on='Title')
 
-    # Convert to pandas dataframe
-    edges_df = nx.to_pandas_edgelist(G)
+    # Explode so that each author-publication pair is a row
+    pubs['Author_list'] = pubs['Author_list'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)  # Ensure it's a list
+    pubs_by_author = pubs.explode('Author_list').reset_index(drop=True)
 
-    # Select Author nodes
-    edges_df = edges_df.loc[edges_df.source.str.startswith('Author'), ]
+    # Prettyfy 
+    pubs_by_author.rename(columns={'Author_list': 'Author'}, inplace=True)
+    pubs_by_author = pubs_by_author[['Author', 'Title','Publication category']].sort_values(by='Author')
 
-    # Count publications per author
-    pub_count = edges_df.value_counts('source')
-    # print(len(pub_count), 'unique authors')
+    # Filter authors that appear more than `min_count`
+    author_counts = pubs_by_author['Author'].value_counts()
+    prolific_authors = author_counts[author_counts > min_count].index
+    filtered_pubs_by_author = pubs_by_author[pubs_by_author['Author'].isin(prolific_authors)].reset_index(drop=True)
 
-    # Reduce to only those with more than one publication
-    pub_count_filtered = pub_count[pub_count > min_count].reset_index(drop=False)
-    # Clean up Author names
-    pub_count_filtered['Author'] = pub_count_filtered.source.apply(lambda x: x.split('/')[-1])
+    # Sort authors by total publication count
+    author_order = (
+        filtered_pubs_by_author.groupby('Author')
+        .size()
+        .sort_values(ascending=False)
+        .index.tolist()
+    )
 
-    # Plot
-    fig = px.histogram(pub_count_filtered, x="Author", y='count')
+    # Plot histogram 
+    color_map = styles.COLOR_MAPS['Category']
+    color_map['Mixed'] = 'grey'
+
+    # Create the histogram
+    fig = px.histogram(
+        filtered_pubs_by_author,
+        x='Author',
+        y=None,  # Automatically counts occurrences
+        category_orders={'Author': author_order},
+        color='Publication category',
+        color_discrete_map=color_map,
+        # hover_data={'Titles': True, 'Author': False},  # Show titles in hover, hide redundant author info
+        title='',
+        
+    )
 
     fig.update_layout(
-        title='Number of publications per author (if > 1)',
         width=fig_width,
         height=fig_height,
-        xaxis_title='Author',
-        yaxis_title='Number of publications',
+        xaxis_title='<b>Author</b>',
+        yaxis_title='<b>Number of publications</b>',
         showlegend=False
     )
-    # Rotate x-tick labels 65 degrees and ensure all labels are shown
-    fig.update_xaxes(tickangle=65, tickmode='linear')
+    # Rotate x-tick labels 65 degrees and reduce font-size ensure all labels are shown
+    fig.update_xaxes(tickangle=65, tickmode='linear', tickfont=dict(size=8))
 
     # Update hover template
     fig.update_traces(hovertemplate='Author: <b>%{x}</b><br>Publication count: %{y}')
@@ -245,11 +236,20 @@ def _publication_network(fig_width=1300, fig_height=900):
     # Wrap text for hover info
     def wrap_text(text, width=35):
         return '<br>'.join(textwrap.wrap(text, width))
+    
+    # List categories by publication
+    pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
+
+    # Check that no publications cover more that 1 category
+    pub_category['Publication category'] = [p[0] if len(set(p)) == 1 else 'Mixed' for p in pub_category['Category']]
+    # Clean titles from ":" to match the entries in the network
+    pub_category['Title'] = pub_category['Title'].str.replace(":", " ")
 
     author_node_x = []
     author_node_y = []
     paper_node_x = []
     paper_node_y = []
+    paper_node_color = []
 
     for node in G.nodes():
         x, y = G.nodes[node]['pos']
@@ -260,6 +260,17 @@ def _publication_network(fig_width=1300, fig_height=900):
             paper_node_x.append(x)
             paper_node_y.append(y)
 
+            node_title = node.split('Paper/')[1]
+            try: 
+                node_category = pub_category.loc[pub_category['Title']==node_title, 'Publication category'].iloc[0]
+                node_color = 'grey' if node_category == 'Mixed' else styles.COLOR_MAPS['Category'][node_category]
+            except:
+                # Matching went wrong, check input 
+                print(node_title)
+                node_color = 'black'
+            
+            paper_node_color.append(node_color)
+
     edge_x = []
     edge_y = []
     for edge in G.edges():
@@ -269,14 +280,16 @@ def _publication_network(fig_width=1300, fig_height=900):
         edge_y.extend([y0, y1, None])
 
     author_node_trace = go.Scatter(x=author_node_x, y=author_node_y, mode='markers',
-                                hoverinfo='text',
-                                marker=dict(size=5, line_width=0.3, color='skyblue'),
-                                text=[n.split('/')[-1] for n in G.nodes() if n.startswith('Author/')])
+                                   marker=dict(size=5, line_width=0.3, color='skyblue'),
+                                   hoverinfo='text',
+                                   text=[n.split('/')[-1] for n in G.nodes() if n.startswith('Author/')])
 
     paper_node_trace = go.Scatter(x=paper_node_x, y=paper_node_y, mode='markers',
-                                hoverinfo='text',
-                                marker=dict(size=7, line_width=0, color='darkgreen'),
-                                text=[wrap_text(n.split('/')[-1]) for n in G.nodes() if n.startswith('Paper/')])
+                                  marker=dict(size=7, line_width=0, color=paper_node_color, symbol='square'),
+                                  hoverinfo='text',
+                                  text=[f"<b>{wrap_text(n.split('/')[-1])}</b><br>Category: "
+                                        f"{pub_category.loc[pub_category['Title'] == n.split('/')[-1], 'Publication category'].squeeze()}" 
+                                        for n in G.nodes() if n.startswith('Paper/')])
 
     edge_trace = go.Scatter(x=edge_x, y=edge_y, mode='lines',
                             hoverinfo='none',
@@ -493,5 +506,36 @@ def _target_base_sankey(fig_width=100, fig_height=150):
     return fig
 
 
+def _sample_size_over_time(data=data, color_by='Category', 
+                           log_sample_size=True, model_type="ols", scope="overall"):
+    """
+    Scatterplot of sample size (y axis) vs. publication date (x axis)
+    """
+    # Color set-up
+    if color_by in styles.COLOR_MAPS.keys():
+        color_map = styles.COLOR_MAPS[color_by]
+    else:
+        color_map = 'Virdis'
+
+    line_color = 'grey' if scope == 'overall' else None
+    model_options = dict(log_y=log_sample_size) if model_type == "ols" else dict(frac=1)
+
+    # Plot
+    fig = px.scatter(data, x='Date', y='Sample size', log_y=log_sample_size,
+                     color=color_by, color_discrete_map=color_map,
+                     hover_name=data.Title.apply(lambda t: "<br>".join(textwrap.wrap(t, width=80))),
+                     hover_data='Phenotype',
+                     trendline=model_type, trendline_scope=scope, trendline_color_override=line_color,
+                     trendline_options=model_options,
+                     title='Sample size over time')
+    # Make it pretty
+    fig.update_traces(marker=dict(size=10, opacity=.5))
+    axes_style = dict(mirror=True, ticks='outside', showline=True, linecolor='black', gridcolor='lightgrey')
+    ylabel_note = ' (log scale)' if log_sample_size else ''
+    fig.update_yaxes(title_text=f'<b>Sample size</b>{ylabel_note}', **axes_style)
+    fig.update_xaxes(title_text='Publication date', **axes_style)
+    fig.update_layout(plot_bgcolor='whitesmoke', width=1300, height=400, margin=dict(l=10, r=10, t=25, b=10))
+
+    return fig
         
 

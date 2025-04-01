@@ -110,14 +110,17 @@ def phenotypes_page(page_id='phenotype_page'):
 
 def publications_page():
     return ui.nav_panel("Publications / Author network",
-                        ui.markdown("Here you can explore the network of authors and publications.<br>" \
-                                    "The histogram shows the number of publications per author, when more than" \
-                                    "one publication was included in the review. Hover over the bars to get more" \
-                                    "info.<br>" ),
-                        output_widget('publication_histogram'),
-                        ui.markdown("The network graph shows the connections between all authors and publications" \
-                                    " included in the review. Hover over the nodes to get more info.<br>"),
-                        output_widget('publication_network'))
+                        ui.markdown("In just a moment, you will see some publication metadata. Explore the network of authors and publications."),
+                        ui.card(ui.card_header("Most prolific authors"),
+                                ui.markdown("The histogram below shows the number of publications per author, when more than " \
+                                    "1 publication was included in the review. These are colored by phenotype category. Hover over the bars to get more info.<br>" ),
+                                output_widget('publication_histogram')),
+                        ui.card(ui.card_header("Publication network"),
+                                ui.markdown("The network graph below shows the connections between all authors and publications " \
+                                    "included in the review. Squares represent publications and they are colored by phenotype category. "\
+                                    "The light-blue dots represent individual authors. Hover over the nodes to get more info.<br>"),
+                                output_widget('publication_network'))
+                        )
 
 def target_base_comparison_page():
     return ui.nav_panel("Target vs. base comparison",
