@@ -311,8 +311,8 @@ def _publication_network(fig_width=1300, fig_height=900):
 
 d = pd.read_csv(f'{assets_directory}/MPS_base_target.csv')
 
-def sankey(ax, var, left_labels, right_labels, d=d, left='targ', right='base',
-           title_left='Target', title_right='Base', spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
+def sankey(ax, var, left_labels, right_labels, d=d, left='base', right='targ',
+           title_left='Base', title_right='Target', spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
     
     counts = pd.DataFrame(d[[f'{var}_{left}',f'{var}_{right}']].value_counts(dropna=False)).reset_index()
     
@@ -424,31 +424,32 @@ def sankey(ax, var, left_labels, right_labels, d=d, left='targ', right='base',
 
 
 def display_match(ax, match, fs=22): 
-    ax.text(x=.5, y=.95, s=f'Match: {round(match)}%',fontsize=fs, ha='center', va='center', transform=ax.transAxes)
+    ax.text(x=.5, y=.95, s=f'Match: {round(match)}%',fontsize=fs, 
+            ha='center', va='center', transform=ax.transAxes)
     ax.axis('off')
 
 
-def _target_base_sankey(fig_width=100, fig_height=150):
+def _target_base_sankey(fig_width=200, fig_height=200):
 
-    fss={'sm': 10, 'l': 11, 'xl': 21}
+    fss={'sm': 8, 'l': 11, 'xl': 21}
     
     fig, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(fig_height, fig_width),
-                                  height_ratios=[1,.2, 1,.2], gridspec_kw=dict(hspace=0, wspace=0.7))
+                                  height_ratios=[1,.2, 1,.2], gridspec_kw=dict(hspace=0, wspace=1.5))
    
     a = sankey(axs['A'], var='Array', 
-            left_labels = {'450K': {'color': 'darkgreen'}, 
+            right_labels = {'450K': {'color': 'darkgreen'}, 
                         'EPICv1': {'color': 'mediumpurple'},
                         'Multiple (450K, EPICv1)': {'color': 'orange'},
                         'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': {'color': 'orange'},
                         'Multiple (450K, EPICv2)': {'color': 'orange'}},
-            right_labels = {'450K': {'color': 'darkgreen'}, 
+            left_labels = {'450K': {'color': 'darkgreen'}, 
                         'EPICv1': {'color': 'mediumpurple'}, 
                         'Multiple (450K, EPICv1)': {'color': 'orange'}}, fss=fss)
 
-    display_match(axs['a'], a)
+    display_match(axs['a'], a, fs=fss['l'])
 
     b = sankey(axs['B'], var='Tissue',
-            left_labels = {'Peripheral blood': {'color':'crimson'},
+            right_labels = {'Peripheral blood': {'color':'crimson'},
                             'Whole blood': {'color':'crimson'},
                             'Dried bloodspot': {'color':'crimson'},
                             'Blood-clots': {'color':'crimson'},
@@ -457,7 +458,7 @@ def _target_base_sankey(fig_width=100, fig_height=150):
                             'Buccal cells': {'color':'teal'},
                             'Tumour cells': {'color':'orange'},
                             'Not reported': {'color':'grey'}}, 
-            right_labels = {'Peripheral blood': {'color':'crimson'},
+            left_labels = {'Peripheral blood': {'color':'crimson'},
                             'Whole blood': {'color':'crimson'},
                             'Cord blood': {'color':'darkred'},
                             'Multiple (Cord blood, Dried bloodspot)': {'color':'crimson'},
@@ -469,13 +470,13 @@ def _target_base_sankey(fig_width=100, fig_height=150):
     display_match(axs['b'], b, fs=fss['l'])
 
     c = sankey(axs['C'], var='Ancestry',
-            left_labels = {'White': {'color':'pink'}, 
+            right_labels = {'White': {'color':'pink'}, 
                             'European': {'color':'pink'}, 
                             'Mixed': {'color':'purple'}, 
                             'Hispanic': {'color': 'orange'},
                             'African': {'color':'crimson'},
                             'Not reported': {'color': 'grey'}}, 
-            right_labels = {'White': {'color':'pink'},
+            left_labels = {'White': {'color':'pink'},
                             'European': {'color':'pink'},
                             'Mixed': {'color':'purple'}, 
                             'Hispanic': {'color': 'orange'},
@@ -485,13 +486,13 @@ def _target_base_sankey(fig_width=100, fig_height=150):
 
 
     dp = sankey(axs['D'], var='Developmental_period',
-            left_labels = {'Birth': {'color':'darkblue'}, 
+            right_labels = {'Birth': {'color':'darkblue'}, 
                 'Very early childhood': {'color':'#4132d4'}, 
                 'Mid childhood': {'color':'#7566ff'}, 
                 'Late childhood': {'color':'#beb7ff'}, 
                 'Childhood and adolescence': {'color':'#f0cdff'}, 
                 'Adolescence': {'color':'purple'}},
-            right_labels = {'Birth': {'color':'darkblue'}, 
+            left_labels = {'Birth': {'color':'darkblue'}, 
                     'Mid childhood': {'color':'#7566ff'}, 
                     'Late childhood': {'color':'#beb7ff'}, 
                     'Childhood': {'color':'blue'},

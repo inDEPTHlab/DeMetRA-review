@@ -123,9 +123,20 @@ def publications_page():
                         )
 
 def target_base_comparison_page():
+    pubs_count = data_subset.groupby('Based on')['Title'].nunique().reset_index().set_index('Based on')
+
+    # Add a column for the percentage of all titles
+    total_titles = pubs_count['Title'].sum()
+    pubs_count['Percent'] = round((pubs_count['Title'] / total_titles) * 100)
+
     return ui.nav_panel("Target vs. base comparison",
-                        ui.markdown("Some paper use existing resource to compute MPSs."),
-                        ui.output_plot("sankey_target_base")),
+                        ui.markdown(f"**{int(100 - pubs_count.loc['Only phenotype', 'Percent'])}%** of publications in this review "\
+                                    f"use existing resources to compute their MPSs.<br>{int(pubs_count.loc['EWAS summary statistics', 'Percent'])}% "\
+                                    f"use EWAS summary statistics, and {int(pubs_count.loc['Validated MPS algorithm', 'Percent'])}% "\
+                                    f"use a validated MPS algorithm. Here we explore these publications further."),
+                        ui.card(ui.card_header("Target/base sample match"),
+                                ui.output_plot("sankey_target_base"),
+                                style="min-height: 800px;"))
 
 def sample_size_page():
     return ui.nav_panel("Sample size over time",

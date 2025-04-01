@@ -74,3 +74,13 @@ body {
 } */
 
 /* Style buttons */
+
+.dynamic-card {
+    width: auto; /* Adjust width to fit content */
+    height: auto; /* Adjust height to fit content */
+    padding: 0; /* Remove extra padding */
+    margin: 0; /* Remove extra margin */
+    display: flex; /* Ensure content alignment */
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+}
