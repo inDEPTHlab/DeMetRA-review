@@ -20,45 +20,48 @@ main_dir = Path(__file__).parent.parent
 
 assets_directory = main_dir / 'assets'
 
-data = pd.read_csv(f'{assets_directory}/MPS_literature_cleaned.csv', parse_dates=['Date'])
+# ================== DATA LOADING =================
+mps_table = pd.read_csv(f'{assets_directory}/MPS_table_cleaned.csv', parse_dates=['Date'])
+pub_table = pd.read_csv(f'{assets_directory}/Publication_table_cleaned.csv', parse_dates=['Date'])
 
-data['Sample size'] = pd.to_numeric(data['Sample_size_total'], errors='coerce')
 
-data_subset = data[['Category', 'Phenotype', 'Developmental_period', 'What_is_available', 
-                    'Author', 'Year', 'Title', 'DOI', 'Sample_size_total', 
-                    'Tissue', 'Array', 'Ancestry']]
 # Turn DOI into a clickable link
-data_subset['DOI'] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in data_subset['DOI']]
+mps_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in mps_table['DOI']]
+pub_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in pub_table['DOI']]
 
-# Clean some column names for display
-data_subset.rename(columns={'Sample_size_total': 'Sample size', 
-                            'Developmental_period': 'Developmental period',
-                            'DOI': 'URL',
-                            'What_is_available': 'Based on'}, inplace=True)
 
+mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs', 'Based on',
+                            'Author', 'Year', 'Title', ' ',  
+                            'Sample type', 'Sample size', 'n Cases', 'n Controls', 
+                            'Developmental period', 'Tissue', 'Array', 'Ancestry',]]
+                            # 'Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5',
+                            # 'Sample_overlap_target_base', 'Determining_weights_1', 'Train_test',
+                            # 'Independent_validation', 'Comparison', 'Missing_value_note',
+                            # 'Reflect_phenotype']]
+
+base_targ_data = pd.read_csv(f'{assets_directory}/MPS_base_target_cleaned.csv')
 
 # ==========================================
 
 
-def _count_papers(d=data):
-    n = int(len(pd.unique(d['Identifier'])))
-    return n
+def _count_papers():
+    return pub_table.shape[0]
 
 
-def _count_mpss(d=data):
-    return d.shape[0]
+def _count_mpss():
+    return mps_table.shape[0]
 
 
-def _count_phenotypes(d=data):
+def _count_phenotypes(d=mps_table):
     n = int(len(pd.unique(d['Phenotype'])))
     return n
 
 # =============== FILTERING & STYLING TABLES ================
 
 def _filter_litreview_table(selected_category, selected_phenotype, selected_period,
-                            selected_year_range, based_on_filter):
+                            selected_year_range, based_on_filter, data=mps_table_show):
     
-    table = data_subset.copy()
+    table = data.copy()
 
     if len(selected_category) > 0:
         table = table.loc[table['Category'].str.contains('|'.join(list(selected_category)), na=False, regex=True), ]
@@ -75,6 +78,9 @@ def _filter_litreview_table(selected_category, selected_phenotype, selected_peri
     if len(based_on_filter) < 3: 
         table = table.loc[table['Based on'].str.contains('|'.join(list(based_on_filter)), na=False, regex=True), ]
     
+    # Sort by phenotype 
+    table = table.sort_values(by='Phenotype')
+
     table_style = _style_litreview_table(table.reset_index())
 
     return table, table_style
@@ -84,11 +90,11 @@ def _style_litreview_table(table):
     
     table_style = [
         {'cols': ['Category', 'Phenotype', 'Author'],
-        'style': {'width': '130px', 'max-width': '130px', 'min-width': '100px'}},
+        'style': {'width': '130px', 'max-width': '150px', 'min-width': '100px'}},
         {'cols': ['Title'],
         'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}},
-        {'cols': ['URL'],
-        'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px'}},
+        {'cols': [' ', 'Sample size', 'n Cases', 'n Controls'],
+        'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px', 'text-align': 'right'}},
 
         ]
     
@@ -106,7 +112,7 @@ def _style_litreview_table(table):
 
 
 def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
-                         fig_width=1300, fig_height=800):
+                         fig_width=1300, fig_height=800, data=mps_table):
     """
         Multilevel pie chart of Category | Phenotypes
     """
@@ -141,7 +147,7 @@ def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
 
     return fig
 
-def _mps_count_histogram(fig_width=1700, fig_height=390):
+def _mps_count_histogram(fig_width=1700, fig_height=390, data=mps_table):
 
     # Group by publication to extract publication category
     pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
@@ -180,7 +186,7 @@ def _mps_count_histogram(fig_width=1700, fig_height=390):
     return fig
 
 
-def _category_over_years(data=data, color_by='Category', 
+def _category_over_years(data=mps_table, color_by='Category', 
                          fig_width=1300, fig_height=450,
                          percent=True):
     """
@@ -201,7 +207,7 @@ def _category_over_years(data=data, color_by='Category',
 
     return fig
 
-def _publication_histogram(min_count=1, fig_width=1700, fig_height=350):
+def _publication_histogram(min_count=1, fig_width=1700, fig_height=350, data=mps_table):
 
     # Group by publication to extract publication category
     pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
@@ -265,7 +271,7 @@ def _publication_histogram(min_count=1, fig_width=1700, fig_height=350):
     return fig
 
     
-def _publication_network(fig_width=1300, fig_height=900):
+def _publication_network(fig_width=1300, fig_height=900, data=mps_table):
 
     # Read the graph object from file
     with open(f'{assets_directory}/Publications_network.pkl', 'rb') as file:
@@ -347,12 +353,11 @@ def _publication_network(fig_width=1300, fig_height=900):
 
     return fig
 
-d = pd.read_csv(f'{assets_directory}/MPS_base_target_cleaned.csv')
-
-def sankey(ax, var, left_labels, right_labels, d=d, left='base', right='targ',
+# ================== SANKY DIAGRAMS ==================
+def sankey(ax, var, left_labels, right_labels, d=base_targ_data, left=' - base', right=' - targ',
            title_left='Base', title_right='Target', spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
     
-    counts = pd.DataFrame(d[[f'{var}_{left}',f'{var}_{right}']].value_counts(dropna=False)).reset_index()
+    counts = pd.DataFrame(d[[f'{var}{left}',f'{var}{right}']].value_counts(dropna=False)).reset_index()
     
     total = counts['count'].sum()
     
@@ -361,7 +366,7 @@ def sankey(ax, var, left_labels, right_labels, d=d, left='base', right='targ',
         size_list = list()
         
         for label in label_dict.keys():
-            label_count = int(counts.loc[counts[f'{var}_{side}']==label, 'count'].sum())
+            label_count = int(counts.loc[counts[f'{var}{side}']==label, 'count'].sum())
             label_dict[label]['size'] = label_count
             size_list.append(label_count)
     
@@ -419,7 +424,7 @@ def sankey(ax, var, left_labels, right_labels, d=d, left='base', right='targ',
             
             strip_color = left_dict[left_label]['color'] # Color strip according to the left side
             
-            strip_size = counts.loc[(counts[f'{var}_{left}']==left_label) & (counts[f'{var}_{right}']==right_label), 'count']
+            strip_size = counts.loc[(counts[f'{var}{left}']==left_label) & (counts[f'{var}{right}']==right_label), 'count']
     
             
             if  len(strip_size) > 0:
@@ -451,10 +456,10 @@ def sankey(ax, var, left_labels, right_labels, d=d, left='base', right='targ',
     
     # Also return overall overla 
     color_counts = counts.copy()
-    color_counts[f'{var}_{left}'] = [left_labels[i]['color'] for i in counts[f'{var}_{left}']]
-    color_counts[f'{var}_{right}'] = [right_labels[i]['color'] for i in counts[f'{var}_{right}']]
+    color_counts[f'{var}{left}'] = [left_labels[i]['color'] for i in counts[f'{var}_{left}']]
+    color_counts[f'{var}{right}'] = [right_labels[i]['color'] for i in counts[f'{var}_{right}']]
     
-    match = int(color_counts.loc[(color_counts[f'{var}_{left}'] == color_counts[f'{var}_{right}']) & (color_counts[f'{var}_{left}'] != 'grey'), 
+    match = int(color_counts.loc[(color_counts[f'{var}{left}'] == color_counts[f'{var}{right}']) & (color_counts[f'{var}{left}'] != 'grey'), 
                 'count'].sum())
     match_percent = match / total * 100
 
@@ -551,7 +556,7 @@ def _target_base_sankey(fig_width=200, fig_height=200):
     return fig
 
 
-def _sample_size_over_time(data=data, color_by='Category', 
+def _sample_size_over_time(data=mps_table, color_by='Category', 
                            log_sample_size=True, model_type="ols", scope="overall"):
     """
     Scatterplot of sample size (y axis) vs. publication date (x axis)

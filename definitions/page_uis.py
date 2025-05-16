@@ -3,7 +3,7 @@ import faicons as fa
 
 from shinywidgets import output_widget
 
-from definitions.backend_funcs import data_subset
+from definitions.backend_funcs import mps_table
 import definitions.layout_styles as style
 
 
@@ -20,7 +20,7 @@ def add_value_box(value, label, icon):
                         max_height='120px')
 
 def var_selector(page_id, variable, title=None):
-    _options = [f for f in data_subset[variable].unique()]
+    _options = [f for f in mps_table[variable].unique()]
     title = variable if not title else title
     variable_id = variable.lower().replace(' ', '')
 
@@ -32,8 +32,8 @@ def var_selector(page_id, variable, title=None):
                               width='95%')
 
 def var_slider(page_id, variable, title=None):
-    _min = int(data_subset[variable].min())
-    _max = int(data_subset[variable].max())
+    _min = int(mps_table[variable].min())
+    _max = int(mps_table[variable].max())
 
     title = variable if not title else title
 
@@ -49,7 +49,7 @@ def var_checkbox(page_id, variable, title=None):
     if variable == "Based on":
         _options = ['Only phenotype', 'EWAS summary statistics', 'Validated MPS algorithm']
     else:
-        _options = [f for f in data_subset[variable].unique()]
+        _options = [f for f in mps_table[variable].unique()]
 
     title = variable if not title else title
     variable_id = variable.lower().replace(' ', '')
@@ -89,6 +89,11 @@ def overview_page(page_id='overview_page'):
                              gap='10px',
                              style=style.SELECTION_PANE),
                         
+                        ui.input_radio_buttons(id='which_table', label="", 
+                                               choices={'mps_table': 'Show all MPSs',
+                                                        'pub_table': 'Group by publication'},
+                                               selected="mps_table",
+                                               inline=True),
                         ui.output_data_frame("overview_page_table"),
                         )
 
@@ -128,7 +133,7 @@ def publications_page():
                         )
 
 def target_base_comparison_page():
-    pubs_count = data_subset.groupby('Based on')['Title'].nunique().reset_index().set_index('Based on')
+    pubs_count = mps_table.groupby('Based on')['Title'].nunique().reset_index().set_index('Based on')
 
     # Add a column for the percentage of all titles
     total_titles = pubs_count['Title'].sum()
