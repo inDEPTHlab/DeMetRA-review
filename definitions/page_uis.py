@@ -102,6 +102,11 @@ def phenotypes_page(page_id='phenotype_page'):
                                                      "` Category | Pehnotype `. Hover over the slices to get more information. "\
                                                      "Click on one of the *inner* macro-categories to zoom into its phenotypes."),
                                                      output_widget('multilevel_piechart')),
+                            ui.nav_panel("Number of MPSs per publication", 
+                                        ui.markdown("In the histogram below, you can see the number of MPSs calculated in each "\
+                                                    "individual publication, colored by phenotype category. "\
+                                                    "Hover over the bars to get more information (e.g publication title)."),
+                                                    output_widget('mps_count_histogram')),                         
                             ui.nav_panel("Categories over time", 
                                          ui.markdown("The stacked histogram below shows the interest in different phenotype categories over " \
                                                      "the years."),

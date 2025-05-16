@@ -7,7 +7,9 @@ import definitions.layout_styles as styles
 from definitions.backend_funcs import _count_papers, _count_mpss, _count_phenotypes, \
     _filter_litreview_table, _style_litreview_table, \
     _target_base_sankey, \
-    _multilevel_piechart, _sample_size_over_time, _category_over_years, _publication_histogram, _publication_network
+    _multilevel_piechart, _mps_count_histogram, _category_over_years, \
+    _publication_histogram, _publication_network, \
+    _sample_size_over_time
 
 from definitions.page_uis import overview_page, phenotypes_page, publications_page, target_base_comparison_page, \
     sample_size_page
@@ -74,6 +76,11 @@ def server(input, output, session):
     @render_plotly
     def multilevel_piechart():
         p = _multilevel_piechart()
+        return p
+    
+    @render_plotly
+    def mps_count_histogram():
+        p = _mps_count_histogram()
         return p
     
     @render_plotly

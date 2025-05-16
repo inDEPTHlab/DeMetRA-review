@@ -141,6 +141,44 @@ def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
 
     return fig
 
+def _mps_count_histogram(fig_width=1700, fig_height=390):
+
+    # Group by publication to extract publication category
+    pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
+    pub_category['Publication category'] = [p[0] if len(set(p)) == 1 else 'Mixed' for p in pub_category['Category']]
+
+    data_with_category = data.merge(pub_category, on='Title', how='left')
+
+    color_map = {'Biological markers': '#113ab7',
+                     'Genetic syndromes': '#008080',
+                     'Lifestyle and environment': '#ffd000',
+                     'Physical health indicators': '#fc9ead',
+                     'Neuro-psychiatric health indicators': '#7e04b3',
+                     'Cancer': '#a21414'}
+    # styles.COLOR_MAPS['Category']
+    color_map['Mixed'] = 'grey'
+
+    fig = px.histogram(
+            data_with_category,
+            x='Title',
+            y=None, 
+            nbins=len(pd.unique(data.Title)),
+            color='Publication category',
+            color_discrete_map=color_map)
+    
+    fig.update_xaxes(showticklabels=False,
+                     categoryorder='total descending')
+    
+    fig.update_layout(
+        width=fig_width,
+        height=fig_height,
+        xaxis_title='<b>Publication</b>',
+        yaxis_title='<b>MPS count</b>',
+        showlegend=False
+    )
+
+    return fig
+
 
 def _category_over_years(data=data, color_by='Category', 
                          fig_width=1300, fig_height=450,
@@ -309,7 +347,7 @@ def _publication_network(fig_width=1300, fig_height=900):
 
     return fig
 
-d = pd.read_csv(f'{assets_directory}/MPS_base_target.csv')
+d = pd.read_csv(f'{assets_directory}/MPS_base_target_cleaned.csv')
 
 def sankey(ax, var, left_labels, right_labels, d=d, left='base', right='targ',
            title_left='Base', title_right='Target', spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
@@ -444,7 +482,10 @@ def _target_base_sankey(fig_width=200, fig_height=200):
                         'Multiple (450K, EPICv2)': {'color': 'orange'}},
             left_labels = {'450K': {'color': 'darkgreen'}, 
                         'EPICv1': {'color': 'mediumpurple'}, 
-                        'Multiple (450K, EPICv1)': {'color': 'orange'}}, fss=fss)
+                        'Multiple (450K, EPICv1)': {'color': 'orange'},
+                        'Multiple (450K, EPICv2)': {'color': 'orange'},
+                        'Multiple (450K, EPICv3)': {'color': 'orange'},
+                        'Multiple (450K, EPICv4)': {'color': 'orange'}}, fss=fss)
 
     display_match(axs['a'], a, fs=fss['l'])
 
@@ -464,6 +505,7 @@ def _target_base_sankey(fig_width=200, fig_height=200):
                             'Multiple (Cord blood, Dried bloodspot)': {'color':'crimson'},
                             'Multiple (Cord blood, Whole blood)': {'color':'crimson'},
                             'Multiple (Whole blood, HPCs)': {'color':'crimson'},
+                            'Buccal cells': {'color':'teal'},
                             'Leukocytes': {'color':'mediumpurple'},
                             'Tumour cells': {'color':'orange'}}, fss=fss)
 
@@ -488,10 +530,12 @@ def _target_base_sankey(fig_width=200, fig_height=200):
     dp = sankey(axs['D'], var='Developmental_period',
             right_labels = {'Birth': {'color':'darkblue'}, 
                 'Very early childhood': {'color':'#4132d4'}, 
+                'Early childhood': {'color':'#4132d4'},
                 'Mid childhood': {'color':'#7566ff'}, 
                 'Late childhood': {'color':'#beb7ff'}, 
                 'Childhood and adolescence': {'color':'#f0cdff'}, 
-                'Adolescence': {'color':'purple'}},
+                'Adolescence': {'color':'purple'},
+                'Not reported': {'color':'grey'}},
             left_labels = {'Birth': {'color':'darkblue'}, 
                     'Mid childhood': {'color':'#7566ff'}, 
                     'Late childhood': {'color':'#beb7ff'}, 
