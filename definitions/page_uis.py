@@ -89,7 +89,7 @@ def overview_page(page_id='overview_page'):
                              gap='10px',
                              style=style.SELECTION_PANE),
                         
-                        ui.input_radio_buttons(id='which_table', label="", 
+                        ui.input_radio_buttons(id='overview_page_which_table', label="", 
                                                choices={'mps_table': 'Show all MPSs',
                                                         'pub_table': 'Group by publication'},
                                                selected="mps_table",

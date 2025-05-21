@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import networkx as nx
 import ast 
+import re
 import textwrap
 
 import definitions.layout_styles as styles
@@ -29,6 +30,51 @@ pub_table = pd.read_csv(f'{assets_directory}/Publication_table_cleaned.csv', par
 mps_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in mps_table['DOI']]
 pub_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in pub_table['DOI']]
 
+pub_table['Phenotype(s)'] = pub_table['Phenotype']
+
+# Display lists inside cells as bulletpoints
+def list_to_html(cell):
+    ul_element = '<ul style="margin-left:0; padding-left:0;">'
+    if isinstance(cell, str): # lists are turned into strings by the csv reader
+        # print(cell)
+        try:
+            value = ast.literal_eval(cell)
+            # print(value)
+            if isinstance(value, list):
+                # print(value)
+                return ui.HTML(ul_element + ''.join([f'<li>{item}</li>' for item in value]) + '</ul>')
+            else: #if isinstance(value, float):
+                return str(int(value)) if not np.isnan(value) else ''
+            
+        except (ValueError, SyntaxError):
+            # Fallback: parse np.float64-style strings
+            matches = re.findall(r'np\.float64\((nan|[\d\.]+)\)', cell)
+            items = []
+            for m in matches:
+                if not m == 'nan':
+                    f = float(m)
+                    # items.append(str(int(f)) if f.is_integer() else str(f))
+                    # Instead of a bulletpoint list I show range
+                    items.append(int(f))
+            
+            if items:
+                # return ui.HTML(ul_element + ''.join([f'<li>{item}</li>' for item in items]) + '</ul>')
+                if len(items) == 2:
+                    return f'{items[0]}, {items[1]}'
+                else: 
+                    return f'{min(items)}-{max(items)}'
+
+    elif isinstance(cell, list):
+        # print(cell)
+        items = [str(int(x)) if isinstance(x, float) and x.is_integer() else str(x) for x in cell]
+        return ui.HTML(ul_element + ''.join([f"<li>{item}</li>" for item in items]) + '</ul>')
+    
+    elif isinstance(cell, float) or isinstance(cell, int):
+        return str(int(cell)) if not np.isnan(cell) else ''
+    
+    else: print(cell)
+
+    return cell
 
 mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs', 'Based on',
                             'Author', 'Year', 'Title', ' ',  
@@ -38,6 +84,15 @@ mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs', 'Based on',
                             # 'Sample_overlap_target_base', 'Determining_weights_1', 'Train_test',
                             # 'Independent_validation', 'Comparison', 'Missing_value_note',
                             # 'Reflect_phenotype']]
+
+pub_table_show = pub_table[['Author', 'Year', 'Title', 'Journal',' ','n MPSs', 'Phenotype(s)', 'Category', 
+                            'n CpGs', 'Based on', 'Sample type', 'Sample size', 'n Cases', 'n Controls',
+                            'Developmental period', 'Tissue', 'Array', 'Ancestry',
+                            'Publication type',]] # 'Keywords', 'Abstract',
+                            # 'Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5',
+                            # 'Sample_overlap_target_base', 'Determining_weights_1', 'Train_test',
+                            # 'Independent_validation', 'Comparison', 'Missing_value_note',
+                            # 'Reflect_phenotype', 'Covariates']]
 
 base_targ_data = pd.read_csv(f'{assets_directory}/MPS_base_target_cleaned.csv')
 
@@ -59,15 +114,19 @@ def _count_phenotypes(d=mps_table):
 # =============== FILTERING & STYLING TABLES ================
 
 def _filter_litreview_table(selected_category, selected_phenotype, selected_period,
-                            selected_year_range, based_on_filter, data=mps_table_show):
+                            selected_year_range, based_on_filter, which_table):
     
-    table = data.copy()
+    if which_table == 'mps_table':
+        table = mps_table_show.copy()
+    else:
+        table = pub_table_show.copy()
 
     if len(selected_category) > 0:
         table = table.loc[table['Category'].str.contains('|'.join(list(selected_category)), na=False, regex=True), ]
 
     if len(selected_phenotype) > 0:
-        table = table.loc[table['Phenotype'].str.contains('|'.join(list(selected_phenotype)), na=False, regex=True), ]
+        v_name = 'Phenotype' if which_table == 'mps_table' else 'Phenotype(s)'
+        table = table.loc[table[v_name].str.contains('|'.join(list(selected_phenotype)), na=False, regex=True), ]
 
     if len(selected_period) > 0:
         table = table.loc[table['Developmental period'].str.contains('|'.join(list(selected_period)), na=False, regex=True), ]
@@ -79,24 +138,44 @@ def _filter_litreview_table(selected_category, selected_phenotype, selected_peri
         table = table.loc[table['Based on'].str.contains('|'.join(list(based_on_filter)), na=False, regex=True), ]
     
     # Sort by phenotype 
-    table = table.sort_values(by='Phenotype')
+    if which_table == 'mps_table':
+        table = table.sort_values(by='Phenotype')
+    else:
+        table = table.sort_values(by=['Author', 'Year'])
+        # Do some extra styling for collapsed values
+        for var_to_restyle in ['Phenotype(s)', 'Category', 'Based on', 
+                               'Developmental period', 'Tissue', 'Array', 'Ancestry',
+                               'n CpGs', 'Sample size','n Cases', 'n Controls']:
+            table[var_to_restyle] = table[var_to_restyle].apply(list_to_html)
 
-    table_style = _style_litreview_table(table.reset_index())
+    table_style = _style_litreview_table(table.reset_index(), which_table=which_table)
 
     return table, table_style
 
 
-def _style_litreview_table(table):
+def _style_litreview_table(table, which_table):
     
     table_style = [
-        {'cols': ['Category', 'Phenotype', 'Author'],
-        'style': {'width': '130px', 'max-width': '150px', 'min-width': '100px'}},
+        {'cols': ['Category', 'Author', 'Based on'],
+        'style': {'width': '130px', 'max-width': '150px', 'min-width': '110px'}},
         {'cols': ['Title'],
         'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}},
         {'cols': [' ', 'Sample size', 'n Cases', 'n Controls'],
         'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px', 'text-align': 'right'}},
-
         ]
+    
+    if which_table == 'pub_table':
+        table_style.extend([
+            {'cols': ['Phenotype(s)'],
+             'style': {'width': '200px', 'max-width': '500px', 'min-width': '200px'}},
+            {'cols': ['n MPSs'],
+             'style': {'text-align': 'center'}}
+             ])
+    else:
+        table_style.extend([
+            {'cols': ['Phenotype', 'Category'],
+             'style': {'width': '200px', 'max-width': '300px', 'min-width': '180px'}},
+             ])
     
     for cat in table['Category'].unique():
         fetch_color = f'var(--light-Category-{cat.replace(" ", "_")})'

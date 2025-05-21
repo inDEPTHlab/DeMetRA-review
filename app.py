@@ -43,7 +43,8 @@ def server(input, output, session):
                                        selected_phenotype = input.overview_page_selected_phenotype(),
                                        selected_period = input.overview_page_selected_developmentalperiod(),
                                        selected_year_range = input.overview_page_selected_year(),
-                                       based_on_filter = input.overview_page_basedon())
+                                       based_on_filter = input.overview_page_basedon(),
+                                       which_table = input.overview_page_which_table())
         
     @output
     @render.text
@@ -67,7 +68,7 @@ def server(input, output, session):
         filtered_data, table_style = filter_overview_page_table()
         return render.DataTable(data=filtered_data, 
                                 selection_mode='rows',
-                                height='500px',
+                                height='450px',
                                 width='100%',
                                 styles=table_style)
     

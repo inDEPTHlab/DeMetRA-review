@@ -61,6 +61,16 @@
     background-color: var(--demetra-purple);
 }
 
+/* Style radio buttons */
+.shiny-input-container .radio-inline input[type="radio"] {
+    border: 1px solid var(--demetra-purple);
+    margin-left: 7px;
+
+}
+.shiny-input-container .radio-inline input[type="radio"]:checked {
+    background-color: var(--demetra-purple);
+}
+
 
 /* Style text */
 
