@@ -88,7 +88,7 @@ mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs', 'Based on',
 pub_table_show = pub_table[['Author', 'Year', 'Title', 'Journal',' ','n MPSs', 'Phenotype(s)', 'Category', 
                             'n CpGs', 'Based on', 'Sample type', 'Sample size', 'n Cases', 'n Controls',
                             'Developmental period', 'Tissue', 'Array', 'Ancestry',
-                            'Publication type',]] # 'Keywords', 'Abstract',
+                            ]] # 'Keywords', 'Abstract', 'Publication type',
                             # 'Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5',
                             # 'Sample_overlap_target_base', 'Determining_weights_1', 'Train_test',
                             # 'Independent_validation', 'Comparison', 'Missing_value_note',
@@ -475,6 +475,10 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data, left=' - base',
         percent_count = round(label_dict[label]['size'] / total * 100)
         percent_count = percent_count if percent_count > 0 else '<1'
         
+        # TMP case specific string handling 
+        if label == 'Multiple (450K, GMEL (~3000 CpGs from EPICv1))':
+            label = 'Multiple (450K, GMEL*)'
+
         s = f"{label}{string_spacer}({percent_count}%)"
         
         return dict(y=y, s=s, va=va)
@@ -535,8 +539,8 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data, left=' - base',
     
     # Also return overall overla 
     color_counts = counts.copy()
-    color_counts[f'{var}{left}'] = [left_labels[i]['color'] for i in counts[f'{var}_{left}']]
-    color_counts[f'{var}{right}'] = [right_labels[i]['color'] for i in counts[f'{var}_{right}']]
+    color_counts[f'{var}{left}'] = [left_labels[i]['color'] for i in counts[f'{var}{left}']]
+    color_counts[f'{var}{right}'] = [right_labels[i]['color'] for i in counts[f'{var}{right}']]
     
     match = int(color_counts.loc[(color_counts[f'{var}{left}'] == color_counts[f'{var}{right}']) & (color_counts[f'{var}{left}'] != 'grey'), 
                 'count'].sum())
@@ -545,18 +549,24 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data, left=' - base',
     return match_percent
 
 
-def display_match(ax, match, fs=22): 
-    ax.text(x=.5, y=.95, s=f'Match: {round(match)}%',fontsize=fs, 
+def display_match(ax, match, fs=22, note=None):
+            
+    ax.text(x=.4, y=.80, s=f'Match:',fontsize=fs, 
             ha='center', va='center', transform=ax.transAxes)
+    ax.text(x=.6, y=.80, s=f'{round(match)}%',fontsize=fs+4, fontweight='bold',
+            ha='center', va='center', transform=ax.transAxes)
+    if note:
+        ax.text(x=.9, y=.99, s=note,fontsize=fs-3, fontstyle='italic',
+            ha='left', va='center', transform=ax.transAxes)
     ax.axis('off')
 
 
-def _target_base_sankey(fig_width=200, fig_height=200):
+def _target_base_sankey(fig_width=200, fig_height=300):
 
     fss={'sm': 8, 'l': 11, 'xl': 21}
     
     fig, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(fig_height, fig_width),
-                                  height_ratios=[1,.2, 1,.2], gridspec_kw=dict(hspace=0, wspace=1.5))
+                                  height_ratios=[1,.27, 1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
    
     a = sankey(axs['A'], var='Array', 
             right_labels = {'450K': {'color': 'darkgreen'}, 
@@ -571,7 +581,7 @@ def _target_base_sankey(fig_width=200, fig_height=200):
                         'Multiple (450K, EPICv3)': {'color': 'orange'},
                         'Multiple (450K, EPICv4)': {'color': 'orange'}}, fss=fss)
 
-    display_match(axs['a'], a, fs=fss['l'])
+    display_match(axs['a'], a, fs=fss['l'], note='* ~3000 CpGs from EPICv1')
 
     b = sankey(axs['B'], var='Tissue',
             right_labels = {'Peripheral blood': {'color':'crimson'},
@@ -611,7 +621,7 @@ def _target_base_sankey(fig_width=200, fig_height=200):
     display_match(axs['c'], c, fs=fss['l'])
 
 
-    dp = sankey(axs['D'], var='Developmental_period',
+    d = sankey(axs['D'], var='Developmental period',
             right_labels = {'Birth': {'color':'darkblue'}, 
                 'Very early childhood': {'color':'#4132d4'}, 
                 'Early childhood': {'color':'#4132d4'},
@@ -630,7 +640,7 @@ def _target_base_sankey(fig_width=200, fig_height=200):
                     'Adults':{'color':'teal'},
                     'Not reported': {'color':'grey'}}, fss=fss)
 
-    display_match(axs['d'], dp, fs=fss['l'])
+    display_match(axs['d'], d, fs=fss['l'])
 
     return fig
 
