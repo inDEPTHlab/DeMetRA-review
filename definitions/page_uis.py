@@ -71,7 +71,7 @@ def overview_page(page_id='overview_page'):
                             add_value_box('paper_count', 'publications', 'file-circle-check'),
                             add_value_box('mpss_count', 'unique MPSs', 'dna'),
                             add_value_box('phenotype_count', 'unique Phenotypes', 'stethoscope'),
-                            ui.value_box('Last update:', ui.span('14/02/2025', style='font-size: 26px'),
+                            ui.value_box('Last update:', ui.span('14/08/2025', style='font-size: 26px'),
                                          showcase=fa.icon_svg("arrow-rotate-right", width='0.5em', height='0.7em'),
                                          showcase_layout="top right",
                                          max_height='120px'),
