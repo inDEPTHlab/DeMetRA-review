@@ -46,10 +46,7 @@ def var_slider(page_id, variable, title=None):
 
 def var_checkbox(page_id, variable, title=None):
     
-    if variable == "Based on":
-        _options = ['Only phenotype', 'EWAS summary statistics', 'Validated MPS algorithm']
-    else:
-        _options = [f for f in mps_table[variable].unique()]
+    _options = sorted([f for f in mps_table[variable].unique()])
 
     title = variable if not title else title
     variable_id = variable.lower().replace(' ', '')
@@ -139,11 +136,11 @@ def target_base_comparison_page():
     total_titles = pubs_count['Title'].sum()
     pubs_count['Percent'] = round((pubs_count['Title'] / total_titles) * 100)
 
-    return ui.nav_panel("Target vs. base comparison",
-                        ui.markdown(f"**{int(100 - pubs_count.loc['Only phenotype', 'Percent'])}%** of publications in this review "\
-                                    f"use existing resources to compute their MPSs.<br>{int(pubs_count.loc['EWAS summary statistics', 'Percent'])}% "\
-                                    f"use EWAS summary statistics, and {int(pubs_count.loc['Validated MPS algorithm', 'Percent'])}% "\
-                                    f"use a validated MPS algorithm. Here we explore these publications further."),
+    return ui.nav_panel("Development vs. application dataset",
+                        ui.markdown(f"**{int(100 - pubs_count.loc['Raw individual-level data', 'Percent'])}%** of publications in this review "\
+                                    f"use existing resources to compute their MPSs.<br>{int(pubs_count.loc['Published summary statistics (semi-supervised)', 'Percent'])}% "\
+                                    f"use published EWAS summary statistics, and {int(pubs_count.loc['Pre-established MPS', 'Percent'])}% "\
+                                    f"use a Pre-established MPS. Here we explore these publications further."),
                         ui.card(ui.card_header("Target/base sample match"),
                                 ui.output_plot("sankey_target_base"),
                                 style="min-height: 800px;"))

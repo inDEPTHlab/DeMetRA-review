@@ -123,7 +123,7 @@ def _(lit_base_raw, lit_raw, mo, pd):
 
         if not variable_base: 
             variable_base = variable
-    
+
         df = pd.concat([lit_raw[variable], lit_base_raw[variable_base]])
         counts = df.value_counts(dropna=False).sort_index()
 
@@ -179,7 +179,7 @@ def _(lit_base_raw, lit_raw, mo, pd):
 
         n_cpg_var = "Number of CpGs"
         new_n_cpg_var = "n CpGs"
-    
+
         empty_mps_count = df[df[n_cpg_var] == 0].shape[0]
         if empty_mps_count > 0:
             print(f"Dropping {empty_mps_count} MPSs which did no identify a solution (0 CpGs included)")
@@ -190,7 +190,7 @@ def _(lit_base_raw, lit_raw, mo, pd):
 
         if replace_with_df is not None:
             print("    --> Replacing with info from base, where possible...")
-    
+
             for _idx, _row in df.iterrows():
                 if pd.isna(_row[n_cpg_var]) & (_row['What_is_available'] != "Only phenotype"):
                     match = replace_with_df[(replace_with_df['Identifier'] == _row['Identifier_base']) & 
@@ -199,13 +199,62 @@ def _(lit_base_raw, lit_raw, mo, pd):
                         print(f"\t({_row['What_is_available']}) {_row['Identifier_base']} {_row['Phenotype']} not found.")
                     else:
                         df.at[_idx, n_cpg_var] = match.iloc[0][n_cpg_var]
-    
+
             print(f"{df[n_cpg_var].isna().sum()} `NA` values left +",
                   f"{df.loc[df[n_cpg_var] == 'Not reported',].shape[0]} `Not reported` values.")
-        
+
         df = coerce_to_numeric(df, n_cpg_var, new_n_cpg_var)
-    
+
         return df
+
+    ris_tags = {'TY': 'Reference Type', 
+                'AU': 'Author_list', 
+                'PY': 'Year', 
+                'TI': 'Title', 
+                'T2': 'Journal', 
+                'J2': 'Journal', 
+                'AB': 'Abstract', 
+                'DO': 'DOI', 
+                'UR': 'URL', 
+                'KW': 'Keywords', 
+                'DA': 'Date'}
+
+    def parse_ris(file_path):
+        with open(file_path, 'r', encoding='utf-8') as _file:
+            references = []
+            current_entry = {}
+            current_tag = None
+            for line in _file:
+                if not line.strip():
+                    continue
+                elif line.strip() == 'ER  -':
+                    references.append(current_entry)
+                    current_entry = {}
+                    current_tag = None
+                else:
+                    tag = line[:5]
+                    if tag in [f'{_t}  -' for _t in ris_tags.keys()]:
+                        current_tag = tag
+                        value = line[5:].strip()
+                        key = ris_tags[tag[:2]]
+                        if key in current_entry:
+                            if isinstance(current_entry[key], list):
+                                current_entry[key].append(value)
+                            else:
+                                current_entry[key] = [current_entry[key], value]
+                        else:
+                            current_entry[key] = value
+                    elif tag in [f'{y}-' for y in range(2000, 2025)]:
+                        value = line.strip()
+                        if 'Date' not in current_entry:
+                            current_entry['Date'] = value
+                    elif current_tag == 'KW  -':
+                        value = line.strip()
+                        if isinstance(current_entry['Keywords'], list):
+                            current_entry['Keywords'].append(value)
+                        else:
+                            current_entry['Keywords'] = [current_entry['Keywords'], value]
+            return references
     return (
         aggregate_values,
         check_variable_levels,
@@ -213,6 +262,7 @@ def _(lit_base_raw, lit_raw, mo, pd):
         coerce_to_numeric,
         count_categories_per_phenotype,
         inspect_variable,
+        parse_ris,
         replace_multiples,
     )
 
@@ -248,16 +298,16 @@ def _(check_variable_levels, mo):
 @app.cell(hide_code=True)
 def _(lit_base_raw, lit_raw, mo, pd):
     def summarize_dimension_reduction_strategies():
-    
+
         strategies = [f"Including_CpGs_{i}" for i in range(1, 6)] # five levels
-    
+
         df = pd.concat([lit_raw[strategies], lit_base_raw[strategies]])
-    
+
         tab_dict = {s: df[s].value_counts(dropna=False).sort_index() for s in strategies}
 
         stacked_strategies = df.stack().reset_index(drop=True)
         conbined_strategies = df.astype(str).agg(" --- ".join, axis=1)
-    
+
         tab_dict["All_strategies"] = stacked_strategies.value_counts(dropna=False).sort_index()
         tab_dict["Combined_strategies"] = conbined_strategies.value_counts(dropna=False)
 
@@ -321,6 +371,50 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
+        r"""
+    ###  Bibliography file
+    I additionally parse the bibliography file for publication dates, abstracts and keywords.
+
+    <ins>Note</ins>: the `Bibliography_<date>.txt` files are generated by exporting the`.ris` or `.enl` files as a RefMan (RIS) .txt file (using Endnote).
+    """
+    )
+    return
+
+
+@app.cell
+def _(assets_directory, lit_raw, parse_date, parse_ris, pd):
+    parsed_data = parse_ris(f"{assets_directory}/Bibliography_raw_files/Bibliography_2025-07-25.txt")
+
+    bib = pd.DataFrame(parsed_data)[['Author_list', 'Year', 'Title', 'Journal', 'Keywords', 'Abstract', 'Date', 'DOI']] # 'URL' no reliable parsing, use links in main 
+    print(bib.shape)
+
+    bib_incl = bib.loc[bib.Title.isin(lit_raw.Title.unique()),].reset_index(drop=True)
+    print(bib_incl.shape)
+
+    # Cleaning Dates
+    print('Note', bib_incl.Date.isna().sum(), 'NaN Date values will be set to 01/06 of respective year')
+    date_tmp = pd.Series([' '.join([d, y]) if y not in d else d for d, y in zip(bib_incl.Date.map(str), bib_incl.Year.map(str))])
+    date_tmp[date_tmp=="May-Jun 2025"] = "Jun 2025"
+    bib_incl.loc[:, 'Date'] = date_tmp.apply(lambda date: 
+                                             parse_date(date).strftime('%Y-%m-%d') if 'nan' not in date else 
+                                             parse_date('01 06' + date[3:]).strftime('%Y-%m-%d'))
+
+    # Cleaning Authors
+    bib_incl['Author'] = [f"{fa[0].split(',')[0]} et al." if len(fa) > 1 else f"{fa[0].split(',')[0]}" 
+                          for fa in bib_incl['Author_list']]
+
+    # Cleaning Journal names
+    bib_incl.loc[bib_incl.DOI.str.contains('10.1007/s00787-024-02390-1', na=False), 'Journal'] = 'Eur Child Adolesc Psych'
+    bib_incl.loc[bib_incl.DOI.str.contains('10.3390/ijms', na=False),  'Journal'] = 'Int J Mol Sci'
+    bib_incl.loc[bib_incl.DOI.str.contains('10.3390/genes16050591', na=False),  'Journal'] = 'Genes'
+
+    bib_incl
+    return (bib_incl,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
         """
     ### Data cleaning 
 
@@ -338,6 +432,7 @@ def _(mo):
 
 @app.cell
 def _(
+    bib_incl,
     clean_n_CpGs,
     coerce_to_numeric,
     lit_base_raw,
@@ -345,7 +440,6 @@ def _(
     replace_multiples,
 ):
     # Clean *_multiple variables ------------------------------------------------------------
-
     lit_main = replace_multiples(lit_raw)
     lit_base = replace_multiples(lit_base_raw)
 
@@ -366,110 +460,22 @@ def _(
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_case', 'n Cases')
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_control', 'n Controls')
 
-    return lit_base, lit_main
 
+    # lit_main = lit_main.rename(columns={'Author': 'Author_dirty', 
+    #                                     'Journal': 'Journal_dirty'}).merge(bib_incl, on='Title', how='left', suffixes=['', '_BIB'])
+    lit_main = lit_main.rename(columns={'Author': 'Author_dirty'}).merge(bib_incl, on='Title', how='left', suffixes=['', '_BIB'])
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    ###  Bibliography file
-    I additionally parse the bibliography file for publication dates, abstracts and keywords.
-
-    <ins>Note</ins>: the `Bibliography_<date>.txt` files are generated by exporting the`.ris` or `.enl` files as a RefMan (RIS) .txt file (using Endnote).
-    """
-    )
-    return
-
-
-@app.cell
-def _(assets_directory, pd):
-    ris_tags = {'TY': 'Reference Type', 
-                'AU': 'Author_list', 
-                'PY': 'Year', 
-                'TI': 'Title', 
-                'T2': 'Journal', 
-                'J2': 'Journal', 
-                'AB': 'Abstract', 
-                'DO': 'DOI', 
-                'UR': 'URL', 
-                'KW': 'Keywords', 
-                'DA': 'Date'}
-
-    def parse_ris(file_path):
-        with open(file_path, 'r', encoding='utf-8') as _file:
-            references = []
-            current_entry = {}
-            current_tag = None
-            for line in _file:
-                if not line.strip():
-                    continue
-                elif line.strip() == 'ER  -':
-                    references.append(current_entry)
-                    current_entry = {}
-                    current_tag = None
-                else:
-                    tag = line[:5]
-                    if tag in [f'{_t}  -' for _t in ris_tags.keys()]:
-                        current_tag = tag
-                        value = line[5:].strip()
-                        key = ris_tags[tag[:2]]
-                        if key in current_entry:
-                            if isinstance(current_entry[key], list):
-                                current_entry[key].append(value)
-                            else:
-                                current_entry[key] = [current_entry[key], value]
-                        else:
-                            current_entry[key] = value
-                    elif tag in [f'{y}-' for y in range(2000, 2025)]:
-                        value = line.strip()
-                        if 'Date' not in current_entry:
-                            current_entry['Date'] = value
-                    elif current_tag == 'KW  -':
-                        value = line.strip()
-                        if isinstance(current_entry['Keywords'], list):
-                            current_entry['Keywords'].append(value)
-                        else:
-                            current_entry['Keywords'] = [current_entry['Keywords'], value]
-            return references
-
-
-    parsed_data = parse_ris(f"{assets_directory}/Bibliography_raw_files/Bibliography_2025-07-25.txt")
-
-    bib = pd.DataFrame(parsed_data)[['Author_list', 'Year', 'Title', 'Journal', 'Keywords', 'Abstract', 'Date', 'DOI', 'URL']]
-    print(bib.shape)
-    bib
-    return (bib,)
-
-
-@app.cell(disabled=True)
-def _(bib, lit_main, parse_date, pd):
-    bib_incl = bib.loc[bib.Title.isin(lit_main.Title.unique()),].reset_index(drop=True)
-    print(bib_incl.shape)
-
-    print('Note', bib_incl.Date.isna().sum(), 'NaN Date values will be set to 01/01 of respective year')
-    date_tmp = pd.Series([' '.join([d, y]) if y not in d else d for d, y in zip(bib_incl.Date.map(str), bib_incl.Year.map(str))])
-    date_tmp[date_tmp=="May-Jun 2025"] = "Jun 2025"
-    bib_incl.loc[:, 'Date'] = date_tmp.apply(lambda date: 
-                                             parse_date(date).strftime('%Y-%m-%d') if 'nan' not in date else 
-                                             parse_date('01 01' + date[3:]).strftime('%Y-%m-%d'))
-
-    bib_incl['Author'] = [f"{fa[0].split(',')[0]} et al." if len(fa) > 1 else f"{fa[0].split(',')[0]}" 
-                          for fa in bib_incl['Author_list']]
-    # bib_incl.loc[bib_incl.DOI.str.contains('10.3390/toxics9100262', na=False), 'Journal'] = 'Toxics'
-    # bib_incl.loc[bib_incl.DOI.str.contains('10.1007/s00787-024-02390-1', na=False), 'Journal'] = 'Eur Child Adolesc Psych'
-    # bib_incl.loc[bib_incl.DOI.str.contains('10.3390/ijms22031111|10.3390/ijms22168611', na=False), 'Journal'] = 'Int J Mol Sci'
-    return
-
-
-@app.cell
-def _():
-    # print(lit_2.shape)
-    # lit_main = lit_2.rename(columns={'Author': 'Author_dirty', 'Journal': 'Journal_dirty'}).merge(bib_incl, on='Title', how='left', suffixes=['', '_BIB'])
     # lit_main['Journal'] = lit_main['Journal'].apply(lambda x: x[0] if isinstance(x, list) else x)
     # lit_main['DOI_BIB'] = lit_main['DOI_BIB'].fillna(lit_main['DOI'])
     # lit_main['DOI'] = lit_main['DOI_BIB']
     # lit_main.drop(['DOI_BIB', 'Year_BIB'], axis=1, inplace=True)
+    return lit_base, lit_main
+
+
+@app.cell
+def _(lit_main):
+    lit_main.loc[lit_main.Journal != lit_main.Journal_BIB, ['Journal', 'Journal_BIB','Title']]
+    # lit_main.loc[lit_main.Author != lit_main.Author_BIB, ['Author', 'Author_BIB','Title']]
     return
 
 
@@ -484,7 +490,7 @@ def _(lit_base, lit_main):
     # lit_main.What_is_available.value_counts(dropna=False)
 
     rename_based_on = {
-        "Only phenotype": "Raw (individual-level) data",
+        "Only phenotype": "Raw individual-level data",
         "Validated MPS algorithm": "Pre-established MPS",
         "EWAS summary statistics": "Published summary statistics (semi-supervised)"
     }
@@ -505,7 +511,8 @@ def _(lit_base, lit_main):
                         'Independent_validation': 'External validation',
                         'Independent_test': 'External validation',
                         'Reflect_phenotype': 'Performance',
-                        'Type': 'Publication type'}
+                        'Type': 'Publication type', 
+                        'Link': 'URL'}
 
     mps_table = lit_main.rename(columns=rename_cols_dict)
     base_table = lit_base.rename(columns=rename_cols_dict)
@@ -547,7 +554,7 @@ def _(mo):
 
 @app.cell
 def _(base_table, mps_table):
-    targ_only = mps_table.loc[mps_table['Based on'] != 'Raw (individual-level) data',]
+    targ_only = mps_table.loc[mps_table['Based on'] != 'Raw individual-level data',]
     print(targ_only.shape, base_table.shape)
     return (targ_only,)
 
@@ -621,7 +628,7 @@ def _(base_table_tmp, targ_expanded):
 
     print(f"{len(unique_to_base)} / {len(base_ids)} unique to base")
     if (len(unique_to_base) > 0): [print('\t', p) for p in unique_to_base]
-    
+
     print(f"{len(unique_to_targ)} / {len(targ_ids)} unique to targ")
     if (len(unique_to_targ) > 0): [print('\t', p) for p in unique_to_targ]
 
@@ -695,7 +702,7 @@ def _(mo, mps_table, pub_table, targ_base_aggre):
                            'n CpGs', 'Based on', 'Sample size', 'n Cases', 'n Controls', 'Sample type', 
                            'Developmental period', 'Tissue', 'Array', 'Ancestry', 
                            'Publication type', 'Journal'] + 
-                           #'Keywords', 'Abstract', 'Author_list', 'Date', 'URL', 
+                           ['Keywords', 'Abstract', 'Author_list', 'Date', 'URL'] + 
                            [f'Dimension reduction ({i})' for i in range(1, 6)] +
                            ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
                             'Comparison', 'Missing_value_note', 'Covariates']]
@@ -704,7 +711,7 @@ def _(mo, mps_table, pub_table, targ_base_aggre):
                            'n CpGs', 'Based on', 'Sample size', 'n Cases', 'n Controls', 'Sample type', 
                            'Developmental period', 'Tissue', 'Array', 'Ancestry', 
                            'Publication type', 'Journal'] + 
-                           #'Keywords', 'Abstract', 'Author_list', 'Date', 'URL', 
+                           ['Keywords', 'Abstract', 'Author_list', 'Date', 'URL'] + 
                            [f'Dimension reduction ({i})' for i in range(1, 6)] +
                            ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
                             'Comparison', 'Missing_value_note', 'Covariates']]
@@ -734,7 +741,7 @@ def _(mo, mps_table, pub_table, targ_base_aggre):
                                         'Comparison [application]', 'Comparison [development]', 
                                         'Missing_value_note [application]', 'Missing_value_note [development]', 
                                         'Covariates [application]', 'Covariates [development]', 
-                                        'Link [application]', 'Link [development]', 
+                                        # 'URL [application]', 'URL [development]', 
                                         'Sample_overlap_target_base [application]', 'Sample_overlap_target_base [development]']]
 
     mo.ui.tabs({"Main": mps_table_clean, "Base-matched": mps_base_matched, "Pubs": pub_table_clean})
@@ -743,10 +750,10 @@ def _(mo, mps_table, pub_table, targ_base_aggre):
 
 @app.cell
 def _(assets_directory, mps_base_matched, mps_table_clean, pub_table_clean):
-    mps_table_clean.to_csv(f'{assets_directory}MPS_table_cleaned-tmp.csv', index=False)
-    pub_table_clean.to_csv(f'{assets_directory}Publication_table_cleaned-tmp.csv', index=False)
+    mps_table_clean.to_csv(f'{assets_directory}MPS_table_cleaned.csv', index=False)
+    pub_table_clean.to_csv(f'{assets_directory}Publication_table_cleaned.csv', index=False)
 
-    mps_base_matched.to_csv(f'{assets_directory}MPS_base_matched_cleaned-tmp.csv', index=False)
+    mps_base_matched.to_csv(f'{assets_directory}MPS_base_matched_cleaned.csv', index=False)
     return
 
 

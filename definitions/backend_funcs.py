@@ -7,7 +7,6 @@ from shiny import ui
 import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import networkx as nx
 import ast 
 import re
 import textwrap
@@ -94,7 +93,7 @@ pub_table_show = pub_table[['Author', 'Year', 'Title', 'Journal',' ','n MPSs', '
                             # 'Independent_validation', 'Comparison', 'Missing_value_note',
                             # 'Reflect_phenotype', 'Covariates']]
 
-base_targ_data = pd.read_csv(f'{assets_directory}/MPS_base_target_cleaned.csv')
+base_targ_data = pd.read_csv(f'{assets_directory}/MPS_base_matched_cleaned.csv')
 
 # ==========================================
 
