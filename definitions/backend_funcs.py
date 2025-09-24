@@ -69,7 +69,8 @@ def list_to_html(cell):
     elif isinstance(cell, float) or isinstance(cell, int):
         return str(int(cell)) if not np.isnan(cell) else ''
     
-    else: print(cell)
+    else: 
+        print(cell)
 
     return cell
 
@@ -441,12 +442,13 @@ def _publication_network(fig_width=1300, fig_height=900, data=mps_table):
     return fig
 
 # ================== SANKY DIAGRAMS ==================
-def sankey(ax, var, left_labels, right_labels, d=base_targ_data, 
+def sankey(ax, var, left_labels, right_labels, data=base_targ_data, 
            left = ' [development]', right = ' [application]',
            title_left='Development\ndataset', title_right='Application\ndataset', 
            spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
     
-    counts = pd.DataFrame(d[[f'{var}{left}',f'{var}{right}']].value_counts(dropna=False)).reset_index()
+    counts = pd.DataFrame(data[[f'{var}{left}',
+                                f'{var}{right}']].value_counts(dropna=False)).reset_index()
 
     # Check specified labels are correct and complete
     def check_labels(label_dict, side):
@@ -518,7 +520,7 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data,
         s = f"{label}{string_spacer}({percent_count}%)"
         
         return dict(y=y, s=s, va=va)
-        
+    
     # Draw left counts
     for label in left_dict.keys():
         ax.fill_between(x=[0, 1], y1=left_dict[label]['top'], y2=left_dict[label]['bottom'], 
@@ -532,20 +534,18 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data,
         ax.text(x=10.1, **label_y(right_dict, label), ha='left', fontsize=fss['sm'])
 
     # Add titles on each side
-    titlespecs = dict(y=-10, va='center',ha='center', fontweight='bold', fontsize=fss['l'])
+    titlespecs = dict(y=-15, va='center',ha='center', fontweight='bold', fontsize=fss['l'])
     ax.text(x=0.5, s=title_left, **titlespecs)
     ax.text(x=9.5, s=title_right, **titlespecs)
-    
+
     # Draw strips 
     for left_label in left_dict.keys():
-        
         for right_label in right_dict.keys():
             
             strip_color = left_dict[left_label]['color'] # Color strip according to the left side
             
             strip_size = counts.loc[(counts[f'{var}{left}']==left_label) & (counts[f'{var}{right}']==right_label), 'count']
     
-            
             if  len(strip_size) > 0:
                 strip_size = int(strip_size.iloc[0])
     
@@ -571,7 +571,7 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data,
     ax.axis('off')
 
     # Add superior title
-    ax.set_title(' '.join(var.split('_')), fontweight='bold', fontsize=fss['xl'], pad=25)
+    ax.set_title(' '.join(var.split('_')), fontweight='bold', fontsize=fss['xl'], pad=28)
     
     # Also return overall overlap
     color_counts = counts.copy()
@@ -587,7 +587,7 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data,
 
 def display_match(ax, match, fs=22, note=None):
             
-    ax.text(x=.4, y=.80, s=f'Match:',fontsize=fs, 
+    ax.text(x=.4, y=.80, s='Match:',fontsize=fs, 
             ha='center', va='center', transform=ax.transAxes)
     ax.text(x=.6, y=.80, s=f'{round(match)}%',fontsize=fs+4, fontweight='bold',
             ha='center', va='center', transform=ax.transAxes)
@@ -598,8 +598,14 @@ def display_match(ax, match, fs=22, note=None):
 
 
 def _single_sankey(var, right_label_order, left_label_order, note=None,
-                   fig_width=200, fig_height=300):
+                   filter = None,
+                   fig_width=8, fig_height=10):
     '''Draw a single sankey diagram for a given variable'''
+
+    if filter != "All application studies":
+        data = base_targ_data.loc[base_targ_data['Based on'] == filter, ]
+    else:
+        data = base_targ_data
 
     fss={'sm': 8, 'l': 11, 'xl': 21}
 
@@ -608,22 +614,27 @@ def _single_sankey(var, right_label_order, left_label_order, note=None,
     right_labels = {label: {'color': color_dict[label]} for label in right_label_order}
     left_labels = {label: {'color': color_dict[label]} for label in left_label_order}
 
-    fig, axs = plt.subplot_mosaic('A;a', figsize=(fig_height, fig_width),
+    fig, axs = plt.subplot_mosaic('A;a', figsize=(fig_width, fig_height),
                                   height_ratios=[1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
     
     main_plot = sankey(axs['A'], var=var, right_labels = right_labels, left_labels = left_labels, 
-                       fss=fss)
+                       data=data, fss=fss)
 
     display_match(axs['a'], main_plot, fs=fss['l'], note=note)
 
+    # Add this to ensure proper layout in Shiny
+    fig.subplots_adjust(left=0.25, right=0.75, bottom=0.1, top=0.9)
+
     return fig
+    
    
 
-def _target_base_sankey(fig_width=200, fig_height=300):
+# OLD PLOT WITH ALL 4 SANKY DIAGRAMS
+def _target_base_sankey(fig_width=20, fig_height=30):
 
     fss={'sm': 8, 'l': 11, 'xl': 21}
     
-    fig, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(fig_height, fig_width),
+    fig, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(fig_width, fig_height),
                                   height_ratios=[1,.27, 1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
    
     a = sankey(axs['A'], var='Array', 

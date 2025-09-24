@@ -12,12 +12,13 @@ NAVBAR_STYLE = "background-color: #4a235a; color: white;"  # Dark purple, you ca
 array_color_map = {'450K': 'darkgreen',
                    'EPICv1': 'mediumpurple',
                    'EPICv2': 'darkblue',
-                   'Nanopore sequencing': 'black',
+                   'Nanopore sequencing': 'orangered',
                    'Multiple (450K, EPICv1)': 'orange',  #'seagreen',
                    'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': 'orange',
                    'Multiple (450K, EPICv2)': 'orange', 
                    'Multiple (450K, EPICv1, PCR)': 'orange',
-                   'Multiple (450K, PCR)': 'orange'}
+                   'Multiple (450K, PCR)': 'orange',
+                   'Not reported': 'grey'}
 
 # TODO: read colors directly from CSS file
 category_color_map = {'Biological markers': '#113ab7',
@@ -29,22 +30,49 @@ category_color_map = {'Biological markers': '#113ab7',
 
 tissue_color_map = {'Peripheral blood': 'crimson',
                     'Whole blood': 'crimson',
-                    'Multiple (Whole blood, HPCs)': 'crimson',
+                    'Blood': 'crimson',
+                    'Dried bloodspot': 'crimson', # 'indianred',
+                    'Blood-clots': 'crimson', #'blueviolet',
                     'Cord blood': 'darkred', # 'brown',
                     'Placenta': 'pink',
-                    'Blood-clots': 'indianred', #'blueviolet',
-                    'Dried bloodspot': 'indianred',
                     'Saliva': 'lightblue',
                     'Buccal cells': 'teal', # 'steelblue',
-                    'Nasal epithelial cells': 'teal',
-                    'Tumour cells': 'orange', #'darkgreen',
                     'Leukocytes': 'mediumpurple',
+                    'Tumour cells': 'orange', #'darkgreen',
+                    'Multiple (Cord blood, Dried bloodspot)': 'crimson',
+                    'Multiple (Cord blood, Whole blood)': 'crimson',
+                    'Multiple (Whole blood, HPCs)': 'crimson',
+                    'Multiple (Placenta, Cord blood)': 'darkred',
+                    'Multiple (Whole blood, Nasal epithelial cells)': 'orange',
+                    'Nasal epithelial cells': 'teal',
                     'Cervical cells': 'magenta',
+                    'Not reported': 'grey'}
+
+ancestry_color_map = {'White': 'pink',
+                      'European': 'pink',
+                      'Mixed': 'purple',
+                      'African': 'crimson',
+                      'Hispanic': 'orange',
+                      'Not reported': 'grey'}
+
+period_color_map = {'Birth': 'darkblue', 
+                    'Very early childhood': '#4132d4', 
+                    'Early childhood': '#4132d4',
+                    'Mid childhood': '#7566ff',
+                    'Childhood': 'blue',
+                    'Late childhood': '#beb7ff', 
+                    'Childhood and adolescence':'#f0cdff', 
+                    'Birth, Childhood and adolescence': '#7b07d0',
+                    'Multiple (Birth to Adolescence)': '#7b07d0',
+                    'Adolescence': 'purple',
+                    'Adulthood': 'teal',
                     'Not reported': 'grey'}
 
 COLOR_MAPS = {'Category': category_color_map,
               'Tissue': tissue_color_map,
-              'Array': array_color_map}
+              'Array': array_color_map, 
+              'Ancestry': ancestry_color_map,
+              'Developmental period': period_color_map}
 
 SELECTION_PANE = 'padding-top: 15px; padding-bottom: 15px; padding-right: 25px; padding-left: 25px; ' \
                  'border-radius: 15px; ' \

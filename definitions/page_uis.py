@@ -154,7 +154,7 @@ def target_base_comparison_page():
                                                 col_widths=[4, 3, 3, -2])),
                                 ui.markdown("The Sankey diagram below shows how well the sample(s) used to develop the MPS " \
                                             "match the sample in which the MPS was applied.<br>"),
-                                ui.output_plot("sankey_target_base_match"),
+                                ui.output_plot("sankey_target_base"),
                                 style="min-height: 800px;"))
 
 def sample_size_page():

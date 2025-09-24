@@ -1,9 +1,8 @@
 from pathlib import Path
-from shiny import App, reactive, render, ui, Inputs
+from shiny import App, reactive, render, ui
 
 from shinywidgets import render_plotly
 
-import definitions.layout_styles as styles
 from definitions.backend_funcs import _count_papers, _count_mpss, _count_phenotypes, \
     _filter_litreview_table, _single_sankey, \
     _multilevel_piechart, _mps_count_histogram, _category_over_years, \
@@ -101,48 +100,57 @@ def server(input, output, session):
     
     # =================== Target vs. base page ====================
     
-    @render.plot(width=1300, height=1400)
+    @render.plot(width=1000, height=1000)
     def sankey_target_base():
         note = None
 
         var = input.comparison_selected_variable()
+        filter_base_type = input.comparison_selected_base_type()
 
         if var == "Array":
-            right_order = ['450K', 'EPICv1', 'EPICv2', 'Nanopore sequencing',
-                           'Multiple (450K, EPICv1)',
-                           'Multiple (450K, GMEL (~3000 CpGs from EPICv1))',
-                           'Multiple (450K, EPICv2)']
             left_order = ['450K', 'EPICv1',
                           'Multiple (450K, EPICv1)', 
                           'Multiple (450K, EPICv1, PCR)', 
                           'Multiple (450K, PCR)']
+            right_order = ['450K', 'EPICv1', 'EPICv2', 'Nanopore sequencing',
+                           'Multiple (450K, EPICv1)',
+                           'Multiple (450K, GMEL (~3000 CpGs from EPICv1))',
+                           'Multiple (450K, EPICv2)', 'Not reported']
             note = '* ~3000 CpGs from EPICv1'
         elif var == "Tissue":
-            right_order = ['Peripheral blood', 'Whole blood', 'Dried bloodspot', 'Blood-clots',
-                           'Cord blood', 'Saliva', 'Buccal cells', 'Tumour cells', 'Not reported'] 
-            left_order = ['Peripheral blood', 'Whole blood',
-                          'Cord blood',
+            left_order = ['Peripheral blood', 'Whole blood', 'Blood', 
+                          'Cord blood', 'Placenta', 'Multiple (Placenta, Cord blood)', 
                           'Multiple (Cord blood, Dried bloodspot)',
                           'Multiple (Cord blood, Whole blood)',
                           'Multiple (Whole blood, HPCs)',
+                          'Multiple (Whole blood, Nasal epithelial cells)',
                           'Buccal cells',
                           'Leukocytes',
                           'Tumour cells']
+            right_order = ['Peripheral blood', 'Whole blood', 'Blood', 'Dried bloodspot', 'Blood-clots',
+                           'Cord blood', 'Placenta',
+                           'Saliva', 'Buccal cells', 'Nasal epithelial cells', 'Tumour cells',
+                           'Multiple (Whole blood, Nasal epithelial cells)',
+                           'Not reported'] 
         elif var == "Ancestry":
-            right_order = ['White', 'European', 'Mixed', 'Hispanic', 'African', 'Not reported']
             left_order = ['White', 'European', 'Mixed', 'Hispanic', 'Not reported']
+            right_order = ['White', 'European', 'Mixed', 'Hispanic', 'African', 'Not reported']
         else: # Developmental period
-            right_order = ['Birth', 'Very early childhood', 'Early childhood', 'Mid childhood',
-                          'Late childhood', 'Childhood and adolescence', 'Adolescence', 'Not reported']
             left_order = ['Birth', 'Mid childhood', 'Late childhood', 'Childhood',
                           'Childhood and adolescence', 'Birth, Childhood and adolescence',
-                          'Adolescence', 'Adults', 'Not reported']
+                          'Multiple (Birth to Adolescence)',
+                          'Adolescence', 'Adulthood', 'Not reported']
+            right_order = ['Birth', 'Very early childhood', 'Early childhood', 'Mid childhood',
+                          'Late childhood', 'Childhood', 'Childhood and adolescence', 'Adolescence', 
+                           'Not reported']
 
-        p = _single_sankey(var = var, left_order = left_order, right_order = right_order, 
-                           note = note)  
+        fig = _single_sankey(var = var, left_label_order = left_order, right_label_order = right_order,
+                            filter = filter_base_type, note = note)  
 
         # p = _target_base_sankey()
-        return p
+
+        return fig
+    
     
     # ================ Sample size over time page =================
     
