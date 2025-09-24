@@ -120,8 +120,9 @@ def publications_page():
                         ui.markdown("In just a moment, you will see some publication metadata. Explore the network of authors and publications."),
                         ui.card(ui.card_header("Most prolific authors"),
                                 ui.markdown("The histogram below shows the number of publications per author, when more than " \
-                                    "1 publication was included in the review. These are colored by phenotype category. Hover over the bars to get more info.<br>" ),
-                                output_widget('publication_histogram')),
+                                    "1 publication was included in the review. These are colored by phenotype category. Hover over the bars to get more info.<br>" \
+                                    "Use the zoom and pan tools on the top-right corner of the plot to explore the data.<br>"),
+                                output_widget('publication_histogram')),     
                         ui.card(ui.card_header("Publication network"),
                                 ui.markdown("The network graph below shows the connections between all authors and publications " \
                                     "included in the review. Squares represent publications and they are colored by phenotype category. "\
@@ -141,8 +142,19 @@ def target_base_comparison_page():
                                     f"use existing resources to compute their MPSs.<br>{int(pubs_count.loc['Published summary statistics (semi-supervised)', 'Percent'])}% "\
                                     f"use published EWAS summary statistics, and {int(pubs_count.loc['Pre-established MPS', 'Percent'])}% "\
                                     f"use a Pre-established MPS. Here we explore these publications further."),
-                        ui.card(ui.card_header("Target/base sample match"),
-                                ui.output_plot("sankey_target_base"),
+                        ui.card(ui.card_header(ui.layout_columns(
+                                                "Development vs. application sample match on:",
+                                                ui.input_selectize(id='comparison_selected_variable',
+                                                                  label='',
+                                                                  choices=['Array', 'Tissue', 'Ancestry', 'Developmental period'],
+                                                                  selected='Array'),
+                                                ui.input_selectize(id='comparison_selected_base_type',
+                                                                  label='',
+                                                                  choices=['All application studies', 'Published summary statistics (semi-supervised)', 'Pre-established MPS']),
+                                                col_widths=[4, 3, 3, -2])),
+                                ui.markdown("The Sankey diagram below shows how well the sample(s) used to develop the MPS " \
+                                            "match the sample in which the MPS was applied.<br>"),
+                                ui.output_plot("sankey_target_base_match"),
                                 style="min-height: 800px;"))
 
 def sample_size_page():

@@ -26,10 +26,8 @@ pub_table = pd.read_csv(f'{assets_directory}/Publication_table_cleaned.csv', par
 
 
 # Turn DOI into a clickable link
-mps_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in mps_table['DOI']]
-pub_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI</a>') for doi in pub_table['DOI']]
-
-pub_table['Phenotype(s)'] = pub_table['Phenotype']
+mps_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI  </a>') for doi in mps_table['DOI']]
+pub_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI  </a>') for doi in pub_table['DOI']]
 
 # Display lists inside cells as bulletpoints
 def list_to_html(cell):
@@ -75,23 +73,25 @@ def list_to_html(cell):
 
     return cell
 
-mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs', 'Based on',
-                            'Author', 'Year', 'Title', ' ',  
+mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs',
+                            'Author', 'Year', 'Title', ' ', 'Based on',
                             'Sample type', 'Sample size', 'n Cases', 'n Controls', 
-                            'Developmental period', 'Tissue', 'Array', 'Ancestry',]]
-                            # 'Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5',
-                            # 'Sample_overlap_target_base', 'Determining_weights_1', 'Train_test',
-                            # 'Independent_validation', 'Comparison', 'Missing_value_note',
-                            # 'Reflect_phenotype']]
+                            'Developmental period', 'Tissue', 'Array', 'Ancestry']
+                            # ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
+                            # [f'Dimension reduction ({i})' for i in range(1, 6)] +
+                            # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
+                            #  'Comparison', 'Missing_value_note', 'Covariates']
+                            ]
 
+                                
 pub_table_show = pub_table[['Author', 'Year', 'Title', 'Journal',' ','n MPSs', 'Phenotype(s)', 'Category', 
                             'n CpGs', 'Based on', 'Sample type', 'Sample size', 'n Cases', 'n Controls',
-                            'Developmental period', 'Tissue', 'Array', 'Ancestry',
-                            ]] # 'Keywords', 'Abstract', 'Publication type',
-                            # 'Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5',
-                            # 'Sample_overlap_target_base', 'Determining_weights_1', 'Train_test',
-                            # 'Independent_validation', 'Comparison', 'Missing_value_note',
-                            # 'Reflect_phenotype', 'Covariates']]
+                            'Developmental period', 'Tissue', 'Array', 'Ancestry']
+                            # ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
+                            # [f'Dimension reduction ({i})' for i in range(1, 6)] +
+                            # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
+                            #  'Comparison', 'Missing_value_note', 'Covariates']
+                            ]
 
 base_targ_data = pd.read_csv(f'{assets_directory}/MPS_base_matched_cleaned.csv')
 
@@ -106,8 +106,8 @@ def _count_mpss():
     return mps_table.shape[0]
 
 
-def _count_phenotypes(d=mps_table):
-    n = int(len(pd.unique(d['Phenotype'])))
+def _count_phenotypes(df = mps_table):
+    n = int(len(pd.unique(df['Phenotype'])))
     return n
 
 # =============== FILTERING & STYLING TABLES ================
@@ -147,7 +147,7 @@ def _filter_litreview_table(selected_category, selected_phenotype, selected_peri
                                'n CpGs', 'Sample size','n Cases', 'n Controls']:
             table[var_to_restyle] = table[var_to_restyle].apply(list_to_html)
 
-    table_style = _style_litreview_table(table.reset_index(), which_table=which_table)
+    table_style = _style_litreview_table(table.reset_index(), which_table = which_table)
 
     return table, table_style
 
@@ -159,8 +159,10 @@ def _style_litreview_table(table, which_table):
         'style': {'width': '130px', 'max-width': '150px', 'min-width': '110px'}},
         {'cols': ['Title'],
         'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}},
-        {'cols': [' ', 'Sample size', 'n Cases', 'n Controls'],
+        {'cols': ['Sample size', 'n Cases', 'n Controls'],
         'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px', 'text-align': 'right'}},
+        {'cols': [' '],
+        'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px', 'text-align': 'center'}},
         ]
     
     if which_table == 'pub_table':
@@ -296,7 +298,14 @@ def _publication_histogram(min_count=1, fig_width=1700, fig_height=350, data=mps
     pubs = pd.merge(pub_category.drop('Category', axis=1), pub_authors, on='Title')
 
     # Explode so that each author-publication pair is a row
-    pubs['Author_list'] = pubs['Author_list'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)  # Ensure it's a list
+    #  - first, esure all authors are in a list 
+    def auth_to_list(x):
+        try:
+            return ast.literal_eval(x)
+        except Exception:
+            return list(x) if isinstance(x, (list, tuple, set)) else [x]
+
+    pubs['Author_list'] = pubs['Author_list'].apply(auth_to_list) 
     pubs_by_author = pubs.explode('Author_list').reset_index(drop=True)
 
     # Prettyfy 
@@ -432,13 +441,41 @@ def _publication_network(fig_width=1300, fig_height=900, data=mps_table):
     return fig
 
 # ================== SANKY DIAGRAMS ==================
-def sankey(ax, var, left_labels, right_labels, d=base_targ_data, left=' - base', right=' - targ',
-           title_left='Base', title_right='Target', spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
+def sankey(ax, var, left_labels, right_labels, d=base_targ_data, 
+           left = ' [development]', right = ' [application]',
+           title_left='Development\ndataset', title_right='Application\ndataset', 
+           spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
     
     counts = pd.DataFrame(d[[f'{var}{left}',f'{var}{right}']].value_counts(dropna=False)).reset_index()
+
+    # Check specified labels are correct and complete
+    def check_labels(label_dict, side):
+        labels_found = set(counts[f'{var}{side}'])
+        labels_requested = set(label_dict.keys())
+        
+        # Elements found but not requested
+        others = list(set(labels_found) - set(labels_requested))
+        if len(others) > 0:
+            print(f'{var}{side}: {len(others)} labels were found in data but not specified ' 
+                  f'in label dict, these will be grouper under "Other": {others}')
+
+            counts[f'{var}{side}'] = counts[f'{var}{side}'].replace({l: "Other" for l in others})
+            label_dict['Other'] = {'color': 'grey'}
+        
+        missing = list(set(labels_requested) - set(labels_found))
+        if len(missing) > 0:
+            print(f'{var}{side}: {len(missing)} labels specified in label dictionary'
+                  f'were not found in data: {missing}')
+            
+            label_dict = {k: v for k, v in label_dict.items() if k not in missing}
+
+        return counts, label_dict
     
+    counts, left_labels = check_labels(left_labels, side=left)
+    counts, right_labels = check_labels(right_labels, side=right)
+
     total = counts['count'].sum()
-    
+
     def size_esimator(label_dict, side):
     
         size_list = list()
@@ -536,7 +573,7 @@ def sankey(ax, var, left_labels, right_labels, d=base_targ_data, left=' - base',
     # Add superior title
     ax.set_title(' '.join(var.split('_')), fontweight='bold', fontsize=fss['xl'], pad=25)
     
-    # Also return overall overla 
+    # Also return overall overlap
     color_counts = counts.copy()
     color_counts[f'{var}{left}'] = [left_labels[i]['color'] for i in counts[f'{var}{left}']]
     color_counts[f'{var}{right}'] = [right_labels[i]['color'] for i in counts[f'{var}{right}']]
@@ -560,6 +597,28 @@ def display_match(ax, match, fs=22, note=None):
     ax.axis('off')
 
 
+def _single_sankey(var, right_label_order, left_label_order, note=None,
+                   fig_width=200, fig_height=300):
+    '''Draw a single sankey diagram for a given variable'''
+
+    fss={'sm': 8, 'l': 11, 'xl': 21}
+
+    color_dict = styles.COLOR_MAPS[var]
+
+    right_labels = {label: {'color': color_dict[label]} for label in right_label_order}
+    left_labels = {label: {'color': color_dict[label]} for label in left_label_order}
+
+    fig, axs = plt.subplot_mosaic('A;a', figsize=(fig_height, fig_width),
+                                  height_ratios=[1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
+    
+    main_plot = sankey(axs['A'], var=var, right_labels = right_labels, left_labels = left_labels, 
+                       fss=fss)
+
+    display_match(axs['a'], main_plot, fs=fss['l'], note=note)
+
+    return fig
+   
+
 def _target_base_sankey(fig_width=200, fig_height=300):
 
     fss={'sm': 8, 'l': 11, 'xl': 21}
@@ -570,15 +629,16 @@ def _target_base_sankey(fig_width=200, fig_height=300):
     a = sankey(axs['A'], var='Array', 
             right_labels = {'450K': {'color': 'darkgreen'}, 
                         'EPICv1': {'color': 'mediumpurple'},
+                        'EPICv2': {'color': 'darkblue'},
+                        'Nanopore sequencing': {'color': 'black'},
                         'Multiple (450K, EPICv1)': {'color': 'orange'},
                         'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': {'color': 'orange'},
                         'Multiple (450K, EPICv2)': {'color': 'orange'}},
             left_labels = {'450K': {'color': 'darkgreen'}, 
-                        'EPICv1': {'color': 'mediumpurple'}, 
+                        'EPICv1': {'color': 'mediumpurple'},
                         'Multiple (450K, EPICv1)': {'color': 'orange'},
-                        'Multiple (450K, EPICv2)': {'color': 'orange'},
-                        'Multiple (450K, EPICv3)': {'color': 'orange'},
-                        'Multiple (450K, EPICv4)': {'color': 'orange'}}, fss=fss)
+                        'Multiple (450K, EPICv1, PCR)': {'color': 'orange'},
+                        'Multiple (450K, PCR)': {'color': 'orange'}}, fss=fss)
 
     display_match(axs['a'], a, fs=fss['l'], note='* ~3000 CpGs from EPICv1')
 

@@ -3654,7 +3654,6 @@ AU  - Huels, A.
 DA  - Dec
 DO  - 10.1080/15592294.2023.2187172
 IS  - 1
-J2  - Epigenetics
 KW  - Epigenetic scores
 Polygenic DNA methylation
 Clumping and thresholding
@@ -3858,6 +3857,7 @@ LB  - 38366065
 PY  - 2024
 SN  - 1435-165X
 ST  - Developmental origins of psycho-cardiometabolic multimorbidity in adolescence and their underlying pathways through methylation markers: a two-cohort study
+T2  - Eur Child Adolesc Psych
 TI  - Developmental origins of psycho-cardiometabolic multimorbidity in adolescence and their underlying pathways through methylation markers: a two-cohort study
 UR  - http://dx.doi.org/10.1007/s00787-024-02390-1
 http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=38366065
@@ -4490,6 +4490,7 @@ AU  - Vitobello, A.
 DO  - 10.3389/fcell.2022.1021785
 LB  - 36393831
 PY  - 2022
+DA  - Oct 28
 SN  - 2296-634X
 SP  - 1021785
 ST  - OMIXCARE: OMICS technologies solved about 33% of the patients with heterogeneous rare neuro-developmental disorders and negative exome sequencing results and identified 13% additional candidate variants
@@ -4974,64 +4975,43 @@ VL  - 7
 ID  - 33
 ER  - 
 
-TY  - GEN
-AB  - Maternal smoking has been linked to adverse health outcomes in newborns but the extent to which it impacts newborn health has not been quantified through an aggregated cord blood DNA methylation (DNAm) score. Here we examine the feasibility of using cord blood DNAm scores leveraging large external studies as discovery samples to capture the epigenetic signature of maternal smoking and its influence on newborns in White European and South Asian populations. We first examined association between individual CpGs and cigarette smoking during pregnancy, smoking exposure in two White European birth cohorts (n = 744). Several previously reported genes for maternal smoking were supported, with the strongest and most consistent signal from the GFI1 gene (6 CpGs with p < 5×10-5). Leveraging established CpGs for maternal smoking, we constructed a cord blood epigenetic score of maternal smoking that was validated in one of the European-origin cohorts (n = 347). This score was then tested for association with smoking status, secondary smoking exposure during pregnancy, and health outcomes in offspring measured after birth in an independent white European (n = 397) and a South Asian birth cohort (n = 504). The epigenetic maternal smoking score was strongly associated with smoking status during pregnancy (OR=1.09 [1.07,1.10], p=5.5×10-33) and more hours of self-reported smoking exposure per week (1.93 [1.27, 2.58], p=7.8×10-9) in White Europeans, but not with self-reported exposure (p > 0.05) in South Asians. The same score was consistently associated with a smaller birth size (-0.37±0.12 cm, p=0.0023) in the South Asian cohort and a lower birth weight (-0.043±0.013kg, p=0.0011) in the combined cohorts. This cord blood epigenetic score can help identify babies exposed to maternal smoking and assess its long-term impact on growth. Notably, these results indicate a consistent association between the DNAm signature of maternal smoking and a small body size and low birthweight in newborns, in both white European mothers who exhibited some amount of smoking and in South Asian mothers who themselves were not active smokers.
-AD  - W.Q. Deng, Peter Boris Centre for Addictions Research, St. Joseph’s Healthcare Hamilton, Hamilton, Canada
-S.S. Anand, Department of Medicine, Faculty of Health Sciences, McMaster University, Hamilton, Canada
-AU  - Deng, W. Q.
-AU  - Cawte, N.
-AU  - Campbell, N.
-AU  - Azab, S. M.
-AU  - de Souza, R. J.
-AU  - Lamri, A.
-AU  - Morrison, K. M.
-AU  - Atkinson, S. A.
-AU  - Subbarao, P.
-AU  - Turvey, S. E.
-AU  - Moraes, T. J.
-AU  - Teo, K. K.
-AU  - Mandhane, P.
-AU  - Azad, M. B.
-AU  - Simons, E.
-AU  - Pare, G.
-AU  - Anand, S. S.
-DO  - 10.1101/2023.09.24.23295907
-KW  - adult
-adverse outcome
-birth cohort
-body size
-Caucasian
-cigarette smoking
-cohort analysis
-controlled study
-current smoker
+TY  - JOUR
+AB  - Background:. Maternal smoking has been linked to adverse health outcomes in newborns but the extent to which it impacts newborn health has not been quantified through an aggregated cord blood DNA methylation (DNAm) score. Here, we examine the feasibility of using cord blood DNAm scores leveraging large external studies as discovery samples to capture the epigenetic signature of maternal smoking and its influence on newborns in White European and South Asian populations. Methods:. We first examined the association between individual CpGs and cigarette smoking during pregnancy, and smoking exposure in two White European birth cohorts (n=744). Leveraging established CpGs for maternal smoking, we constructed a cord blood epigenetic score of maternal smoking that was validated in one of the European-origin cohorts (n=347). This score was then tested for association with smoking status, secondary smoking exposure during pregnancy, and health outcomes in offspring measured after birth in an independent White European (n=397) and a South Asian birth cohort (n=504). Results:. Several previously reported genes for maternal smoking were supported, with the strongest and most consistent association signal from the GFI1 gene (6 CpGs with p<5 × 10-5). The epigenetic maternal smoking score was strongly associated with smoking status during pregnancy (OR = 1.09 [1.07, 1.10], p=5.5 × 10-33) and more hours of self-reported smoking exposure per week (1.93 [1.27, 2.58], p=7.8 × 10-9) in White Europeans. However, it was not associated with self-reported exposure (p>0.05) among South Asians, likely due to a lack of smoking in this group. The same score was consistently associated with a smaller birth size (–0.37±0.12 cm, p=0.0023) in the South Asian cohort and a lower birth weight (–0.043±0.013 kg, p=0.0011) in the combined cohorts. Conclusions:. This cord blood epigenetic score can help identify babies exposed to maternal smoking and assess its long-term impact on growth. Notably, these results indicate a consistent association between the DNAm signature of maternal smoking and a small body size and low birth weight in newborns, in both White European mothers who exhibited some amount of smoking and in South Asian mothers who themselves were not active smokers. Funding:. This study was funded by the Canadian Institutes of Health Research Metabolomics Team Grant: MWG-146332.
+AU  - Deng, Wei Q.
+AU  - Cawte, Nathan
+AU  - Campbell, Natalie
+AU  - Azab, Sandi M.
+AU  - de Souza, Russell J.
+AU  - Lamri, Amel
+AU  - Morrison, Katherine M.
+AU  - Atkinson, Stephanie A.
+AU  - Subbarao, Padmaja
+AU  - Turvey, Stuart E.
+AU  - Moraes, Theo J.
+AU  - Teo, Koon K.
+AU  - Mandhane, Piush J.
+AU  - Azad, Meghan B.
+AU  - Simons, Elinor
+AU  - Paré, Guillaume
+AU  - Anand, Sonia S.
+C1  - eLife 2024;13:RP93260
+DA  - 2024/08/14
+DO  - 10.7554/eLife.93260
+KW  - DOHaD
+Maternal smoking
+cord blood
 DNA methylation
-European
-female
-human
-infant
-low birth weight
-major clinical study
-maternal smoking
-newborn
-people by smoking status
-pregnancy
-preprint
-progeny
-smoking
 South Asian
-umbilical cord blood
-LA  - English
-M3  - Preprint
-N1  - L2027603300
-2024-07-08
-PY  - 2023
+birth cohort
+PY  - 2024
+SN  - 2050-084X
+SP  - RP93260
 ST  - Maternal smoking DNA methylation risk score associated with health outcomes in offspring of European and South Asian ancestry
-T2  - medRxiv
+T2  - eLife
 TI  - Maternal smoking DNA methylation risk score associated with health outcomes in offspring of European and South Asian ancestry
-UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2027603300&from=export
-http://dx.doi.org/10.1101/2023.09.24.23295907
-ID  - 130
+UR  - https://doi.org/10.7554/eLife.93260
+VL  - 13
+ID  - 517
 ER  - 
 
 TY  - GEN
@@ -6859,7 +6839,7 @@ M3  - Review
 N1  - 9303
 PY  - 2020
 ST  - Diagnostic Utility of Genome-Wide DNA Methylation Analysis in Mendelian Neurodevelopmental Disorders
-T2  - Int. J. Mol. Sci.
+T2  - Int J Mol Sci
 TI  - Diagnostic Utility of Genome-Wide DNA Methylation Analysis in Mendelian Neurodevelopmental Disorders
 VL  - 21
 ID  - 464
@@ -6968,6 +6948,7 @@ LB  - 33498634
 PY  - 2021
 SN  - 1422-0067
 ST  - Detection of a DNA Methylation Signature for the Intellectual Developmental Disorder, X-Linked, Syndromic, Armfield Type
+T2  - Int J Mol Sci
 TI  - Detection of a DNA Methylation Signature for the Intellectual Developmental Disorder, X-Linked, Syndromic, Armfield Type
 UR  - http://dx.doi.org/10.3390/ijms22031111
 http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=33498634
@@ -10693,7 +10674,7 @@ AU  - Alders, Marielle
 AU  - Tedder, Matthew L.
 AU  - Sadikovic, Bekim
 DA  - 2022/01/13/
-DO  - https://doi.org/10.1016/j.xhgg.2021.100075
+DO  - 10.1016/j.xhgg.2021.100075
 IS  - 1
 KW  - Episignatures
 Neurodevelopmental disorders
@@ -10839,53 +10820,91 @@ VL  - 21
 ID  - 342
 ER  - 
 
-TY  - GEN
-AB  - De novo, truncating variants of ASXL1 cause two distinct disorders: Bohring-Opitz Syndrome (BOS, OMIM #605039) a rare pediatric disorder characterized by multiorgan anomalies that disrupt normal brain, heart, and bone development causing severe intellectual disability or are somatic driver mutations causing acute myeloid leukemia(AML). Despite their distinct clinical presentations, we propose that ASXL1 mutations drive common epigenetic and transcriptomic dysregulation in BOS and AML. We analyzed DNA methylation (DNAm) and RNA-seq data from BOS patients (n=13) and controls (n=38) and publicly available DNAm of AML cases with (n=3) and without (n=3) ASXL1 mutations from The Cancer Genome Atlas (TCGA), and RNA-seq data from AML cases (n=27) from the Beat AML cohort. Using a DNA-methylation based episignature that we previously developed for BOS, we clustered AML, BOS and normal controls together. We showed that AML samples with ASXL1 mutations clustered closest to individuals with BOS, whereas individuals with AML without ASXL1 mutations clustered separately. We also observe common dysregulation of the transcriptome between BOS and AML with ASXL1 mutations compared to controls. Our transcriptomic analysis identified 821 significantly differentially expressed genes that were shared between both data sets and 74.9% showed differential expression in the same direction. BOS patients are rare and have some reports of tumors but no clear guidelines on cancer screening protocols. This represents the first direct comparison between distinct diseases that show common epigenetic and transcriptomic effects, and potentially common drug targets for patients harboring ASXL1 mutations on the epigenome and transcriptome.
-AD  - V.A. Arboleda, Department of Pathology and Laboratory Medicine, David Geffen School of Medicine, UCLA, Los Angeles, CA, United States
+TY  - JOUR
+AB  - BACKGROUND: Rare variants in epigenes (a.k.a. chromatin modifiers), a class of genes that control epigenetic regulation, are commonly identified in both pediatric neurodevelopmental syndromes and as somatic variants in cancer. However, little is known about the extent of the shared disruption of signaling pathways by the same epigene across different diseases. To address this, we study an epigene, Additional Sex Combs-like 1 (ASXL1), where truncating heterozygous variants cause Bohring-Opitz syndrome (BOS, OMIM #605039), a germline neurodevelopmental disorder, while somatic variants are driver events in acute myeloid leukemia (AML). No BOS patients have been reported to have AML. METHODS: This study explores common pathways dysregulated by ASXL1 variants in patients with BOS and AML. We analyzed whole blood transcriptomic and DNA methylation data from patients with BOS and AML with ASXL1-variant (AML-ASXL1) and examined differential exon usage and cell proportions. RESULTS: Our analyses identified common molecular signatures between BOS and AML-ASXL1 and highlighted key biomarkers, including VANGL2, GRIK5 and GREM2, that are dysregulated across samples with ASXL1 variants, regardless of disease type. Notably, our data revealed significant de-repression of posterior homeobox A (HOXA) genes and upregulation of Wnt-signaling and hematopoietic regulator HOXB4. While we discovered many shared epigenetic and transcriptomic features, we also identified differential splice isoforms in RUNX3 where the long isoform, p46, is preferentially expressed in BOS, while the shorter p44 isoform is expressed in AML-ASXL1. CONCLUSION: Our findings highlight the strong effects of ASXL1 variants that supersede cell-type and even disease states. This is the first direct comparison of transcriptomic and methylation profiles driven by pathogenic variants in a chromatin modifier gene in distinct diseases. Similar to RASopathies, in which pathogenic variants in many genes lead to overlapping phenotypes that can be treated by inhibiting a common pathway, our data identifies common pathways for ASXL1 variants that can be targeted for both disease states. Comparative approaches of high-penetrance genetic variants across cell types and disease states can identify targetable pathways to treat multiple diseases. Finally, our work highlights the connections of epigenes, such as ASXL1, to an underlying stem-cell state in both early development and in malignancy.
+AD  - Department of Pathology and Laboratory Medicine, David Geffen School of Medicine, UCLA, Los Angeles, CA, USA.
+Department of Computational Medicine, David Geffen School of Medicine, UCLA, Los Angeles, CA, USA.
+Department of Human Genetics, David Geffen School of Medicine, UCLA, Los Angeles, CA, USA.
+Department of Genetics and Genome Biology, The Hospital for Sick Children, Toronto, ON, Canada.
+Department of Human Genetics, Division of Clinical Genetics, UCLA, Los Angeles, CA, USA.
+Department of Pediatrics, Division of Clinical & Metabolic Genetics, The Hospital for Sick Children, Toronto, ON, Canada.
+Institute of Medical Sciences, Department of Molecular Genetics, University of Toronto, Toronto, ON, Canada.
+Department of Pathology and Laboratory Medicine, David Geffen School of Medicine, UCLA, Los Angeles, CA, USA. varboleda@mednet.ucla.edu.
+Department of Computational Medicine, David Geffen School of Medicine, UCLA, Los Angeles, CA, USA. varboleda@mednet.ucla.edu.
+Department of Human Genetics, David Geffen School of Medicine, UCLA, Los Angeles, CA, USA. varboleda@mednet.ucla.edu.
+Interdepartmental Bioinformatics Program, UCLA, Los Angeles, CA, USA. varboleda@mednet.ucla.edu.
+Molecular Biology institute, UCLA, Los Angeles, CA, USA. varboleda@mednet.ucla.edu.
+Jonsson Comprehensive Cancer Center, UCLA, Los Angeles, CA, USA. varboleda@mednet.ucla.edu.
+AN  - 39614348
 AU  - Lin, I.
 AU  - Awamleh, Z.
+AU  - Sinvhal, M.
+AU  - Wan, A.
+AU  - Bondhus, L.
 AU  - Wei, A.
-AU  - Russell, B.
+AU  - Russell, B. E.
 AU  - Weksberg, R.
 AU  - Arboleda, V. A.
-DO  - 10.1101/2022.12.15.519823
-KW  - acute myeloid leukemia
-adult
-cancer patient
-chromosome aberration
-clinical article
-cohort analysis
-controlled study
-differential expression analysis
-DNA methylation
-epigenetics
-epigenome
-gene expression
-gene mutation
-genetic association
-genetic susceptibility
-genetic transcription
-germ line
-human
-human cell
-male
-multiomics
-Opitz syndrome
-primary cell
-protein expression
-RNA sequencing
-LA  - English
-M3  - Preprint
-N1  - L2022245515
-2023-06-12
-PY  - 2022
-SN  - 2692-8205
-ST  - ASXL1 mutations that cause Bohring Opitz Syndrome (BOS) or acute myeloid leukemia share epigenomic and transcriptomic signatures
-T2  - bioRxiv
-TI  - ASXL1 mutations that cause Bohring Opitz Syndrome (BOS) or acute myeloid leukemia share epigenomic and transcriptomic signatures
-UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2022245515&from=export
-http://dx.doi.org/10.1101/2022.12.15.519823
-ID  - 284
+C2  - PMC11606099
+DA  - Nov 29
+DO  - 10.1186/s12920-024-02039-7
+DP  - NLM
+ET  - 2024/11/30
+IS  - 1
+KW  - Humans
+*Repressor Proteins/genetics/metabolism
+*Protein Isoforms/genetics/metabolism
+*Wnt Signaling Pathway/genetics
+DNA Methylation
+Leukemia, Myeloid, Acute/genetics/pathology/metabolism
+Male
+Female
+Epigenesis, Genetic
+Child
+Adolescent
+Asxl1
+Acute myeloid leukemia
+Bohring-Opitz syndrome
+Epigenetics
+Multi-omics
+RNA-sequencing
+Transcriptomics
+obtained through the Institutional Ethics Review Boards at UCLA and Hospital for
+Sick Children. Informed consent was obtained from all research participants
+according to the protocol approved by the Hospital for Sick Children
+(REB#1000038847) and UCLA (IRB#11-001087). Consent for publication: Not
+applicable. Competing interests: The authors declare no competing interests.
+LA  - eng
+N1  - 1755-8794
+Lin, Isabella
+Awamleh, Zain
+Sinvhal, Mili
+Wan, Andrew
+Bondhus, Leroy
+Wei, Angela
+Russell, Bianca E
+Weksberg, Rosanna
+Arboleda, Valerie A
+T32GM008042/GM/NIGMS NIH HHS/United States
+U01HL153007/HL/NHLBI NIH HHS/United States
+F31HG013462/HG/NHGRI NIH HHS/United States
+Mc2015-16/arre/
+IGH-155182/CAPMC/CIHR/Canada
+Mop-126054/chir/
+IDS11-02/Epilepsy Research Program of the Ontario Brain Institute/
+DP5OD024579/NIH Office of the Director/
+20231780/W. M. Keck Foundation/
+Journal Article
+England
+BMC Med Genomics. 2024 Nov 29;17(1):282. doi: 10.1186/s12920-024-02039-7.
+PY  - 2024
+SN  - 1755-8794
+SP  - 282
+ST  - ASXL1 truncating variants in BOS and myeloid leukemia drive shared disruption of Wnt-signaling pathways but have differential isoform usage of RUNX3
+T2  - BMC Med Genomics
+TI  - ASXL1 truncating variants in BOS and myeloid leukemia drive shared disruption of Wnt-signaling pathways but have differential isoform usage of RUNX3
+VL  - 17
+ID  - 519
 ER  - 
 
 TY  - BOOK
@@ -11329,7 +11348,7 @@ PY  - 2024
 SN  - 1469-7610
 SP  - 77-90
 ST  - DNA methylation at birth and lateral ventricular volume in childhood: a neuroimaging epigenetics study
-T2  - Journal of child psychology and psychiatry, and allied disciplines
+T2  - J Child Psychol Psychiatry
 TI  - DNA methylation at birth and lateral ventricular volume in childhood: a neuroimaging epigenetics study
 UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L641848460&from=export
 http://dx.doi.org/10.1111/jcpp.13866
@@ -11881,7 +11900,7 @@ PY  - 2021
 SN  - 1545-5017
 1545-5009
 ST  - Medulloblastoma and familial adenomatous polyposis: Good prognosis and good quality of life in the long-term?
-T2  - Pediatric Blood and Cancer
+T2  - Pediatr Blood Cancer
 TI  - Medulloblastoma and familial adenomatous polyposis: Good prognosis and good quality of life in the long-term?
 UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2010186022&from=export
 http://dx.doi.org/10.1002/pbc.28912
@@ -12612,6 +12631,7 @@ AU  - van Dongen, J.
 DO  - 10.3389/fpsyt.2021.688464
 LB  - 34393852
 PY  - 2021
+DA  - Jul 29
 SN  - 1664-0640
 SP  - 688464
 ST  - Predicting Complex Traits and Exposures From Polygenic Scores and Blood and Buccal DNA Methylation Profiles
@@ -13717,7 +13737,6 @@ AU  - Tucker-Drob, E. M.
 AU  - Harden, K. P.
 DA  - 2023 Aug
 DO  - 10.1177/21677026231186802
-J2  - Clinical Psychological Science
 KW  - DNA methylation
 epigenetics
 mental health
@@ -13736,7 +13755,7 @@ M3  - Article; Early Access
 PY  - 2023
 SN  - 2167-7026
 ST  - Associations of DNA-Methylation Measures of Biological Aging With Social Disparities in Child and Adolescent Mental Health
-T2  - Clin. Psychol. Sci.
+T2  - Clin Psychol Sci
 TI  - Associations of DNA-Methylation Measures of Biological Aging With Social Disparities in Child and Adolescent Mental Health
 ID  - 441
 ER  - 
@@ -13971,6 +13990,7 @@ LB  - 34445317
 PY  - 2021
 SN  - 1422-0067
 ST  - Identification of a DNA Methylation Episignature in the 22q11.2 Deletion Syndrome
+T2  - Int J Mol Sci
 TI  - Identification of a DNA Methylation Episignature in the 22q11.2 Deletion Syndrome
 UR  - http://dx.doi.org/10.3390/ijms22168611
 http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=34445317
@@ -15953,6 +15973,7 @@ AU  - He, Z.
 DO  - 10.3389/fcell.2021.683242
 LB  - 35004665
 PY  - 2021
+DA  - Dec 24
 SN  - 2296-634X
 SP  - 683242
 ST  - DNA Methylation Data-Based Classification and Identification of Prognostic Signature of Children With Wilms Tumor
@@ -17616,18 +17637,22 @@ ID  - 105
 ER  - 
 
 TY  - JOUR
-AB  - … and Children (ALSPAC) at ages 7-24 and their mothers antenatally and in middle age (N range = 145-1464). Episcore-… We also assessed whether Gadd episcore performance was …
-AU  - Waterfield, S.
-AU  - Yousefi, P. D.
-AU  - Suderman, M.
-DO  - 10.1101/2024.06.13.24308877.abstract
-N1  - Query date: 2024-07-09 15:39:29
+AB  - Multiple studies have shown that DNA methylation (DNAm) models of protein abundance can be informative about exposure, phenotype and disease risk. Here we investigate and provide descriptive details of the capacity of DNAm to capture non-genetic variation in protein abundance across the lifecourse. We evaluated the performance of 14 previously published DNAm models of protein abundance (episcores) in peripheral blood from a large adult population using the Avon Longitudinal Study of Parents and Children (ALSPAC) at ages 7–24 and their mothers antenatally and in middle age (N range = 145–1464). New age-specific episcores were trained in ALSPAC and evaluated at different ages. In all instances, episcore–protein associations were evaluated with and without adjustment for genetics. The association between longitudinal protein stability and longitudinal episcore projection was also evaluated, as was sex-specificity of episcores derived solely in female participants. Of the 14 Gadd episcores, 10 generated estimates associated with abundance in middle age, 9 at age 24, and none at age 9. Eight of these episcores explained variation beyond genotype in adulthood (6 at age 24; 7 at midlife). At age 9, the abundances of 22 proteins could be modelled by DNAm, 7 beyond genotype of which one trained model generated informative estimates at ages 24 and in middle age. At age 24, 31 proteins could be modelled by DNAm, 19 beyond genotype, of which 5 trained models generated informative estimates at age 9 and 8 in middle age. In middle age, 23 proteins could be modelled, 13 beyond genotype, of which 3 were informative at age 9 and 7 at age 24. We observed that episcores performed better at older ages than in children with several episcores capturing non-genetic variation at all ages.
+AU  - Waterfield, Scott
+AU  - Yousefi, Paul
+AU  - Suderman, Matt
+DA  - 2024/12/21
+DO  - 10.1186/s13148-024-01802-y
+IS  - 1
 PY  - 2024
+SN  - 1868-7083
+SP  - 189
 ST  - DNA methylation models of protein abundance across the lifecourse
-T2  - medRxiv
+T2  - Clin Epigenetics
 TI  - DNA methylation models of protein abundance across the lifecourse
-UR  - https://www.medrxiv.org/content/10.1101/2024.06.13.24308877.abstract
-ID  - 467
+UR  - https://doi.org/10.1186/s13148-024-01802-y
+VL  - 16
+ID  - 518
 ER  - 
 
 TY  - JOUR
@@ -18496,7 +18521,9 @@ SP  - 2471129
 ST  - A polyepigenetic glucocorticoid exposure score and HPA axis-related DNA methylation are associated with gestational epigenetic aging
 T2  - Epigenetics
 TI  - A polyepigenetic glucocorticoid exposure score and HPA axis-related DNA methylation are associated with gestational epigenetic aging
-UR  - http://dx.doi.org/10.1080/15592294.2025.2471129http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=40007075https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=medl&DO=10.1080%2f15592294.2025.2471129
+UR  - http://dx.doi.org/10.1080/15592294.2025.2471129
+http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=40007075
+https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=medl&DO=10.1080%2f15592294.2025.2471129
 VL  - 20
 ID  - 129
 ER  - 
@@ -19035,7 +19062,7 @@ AU  - Sabhlok, A.
 AU  - Tanksley, P.
 AU  - Tucker-Drob, E. M.
 AU  - Harden, K. P.
-DA  - May-Jun
+DA  - Apr 02
 DO  - 10.1111/cdev.14239
 IS  - 3
 LB  - 40171752
@@ -19424,12 +19451,14 @@ LB  - 39089258
 M3  - Article
 N1  - American Journal of Human Genetics L2033656460 2024-08-07 2024-08-09
 PY  - 2024
+DA  - Aug 8
 SN  - 1537-6605 0002-9297
 SP  - 1643-1655
 ST  - Identification of a DNA methylation episignature for recurrent constellations of embryonic malformations
 T2  - Am J Hum Genet
 TI  - Identification of a DNA methylation episignature for recurrent constellations of embryonic malformations
-UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2033656460&from=exporthttp://dx.doi.org/10.1016/j.ajhg.2024.07.005
+UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2033656460&from=export
+http://dx.doi.org/10.1016/j.ajhg.2024.07.005
 VL  - 111
 ID  - 185
 ER  - 
@@ -19466,7 +19495,6 @@ AU  - Sadikovic, B.
 DA  - Oct
 DO  - 10.1016/j.gim.2024.101226
 IS  - 10
-J2  - Genetics in Medicine
 KW  - DNA methylation
 Epigenetics
 Episignature
@@ -19487,7 +19515,7 @@ N1  - 101226
 PY  - 2024
 SN  - 1098-3600
 ST  - Discovery of DNA methylation signature in the peripheral blood of individuals with history of antenatal exposure to valproic acid
-T2  - Genet. Med.
+T2  - Genet Med
 TI  - Discovery of DNA methylation signature in the peripheral blood of individuals with history of antenatal exposure to valproic acid
 VL  - 26
 ID  - 213
@@ -19654,11 +19682,13 @@ LB  - 40044822
 M3  - Article in Press
 N1  - European Journal of Human Genetics L2033535586 2025-03-14
 PY  - 2025
+DA  - Mar 05
 SN  - 1476-5438 1018-4813
 ST  - ARID2-related disorder: further delineation of the clinical phenotype of 27 novel individuals and description of an epigenetic signature
 T2  - Eur J Hum Genet
 TI  - ARID2-related disorder: further delineation of the clinical phenotype of 27 novel individuals and description of an epigenetic signature
-UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2033535586&from=exporthttp://dx.doi.org/10.1038/s41431-025-01798-w
+UR  - https://www.embase.com/search/results?subaction=viewrecord&id=L2033535586&from=export
+http://dx.doi.org/10.1038/s41431-025-01798-w
 ID  - 197
 ER  - 
 
@@ -20013,7 +20043,9 @@ SP  - 6524
 ST  - Diagnostic utility of DNA methylation analysis in genetically unsolved pediatric epilepsies and CHD2 episignature refinement
 T2  - Nat Commun
 TI  - Diagnostic utility of DNA methylation analysis in genetically unsolved pediatric epilepsies and CHD2 episignature refinement
-UR  - http://dx.doi.org/10.1038/s41467-024-50159-6http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=39107278https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=med26&DO=10.1038%2fs41467-024-50159-6
+UR  - http://dx.doi.org/10.1038/s41467-024-50159-6
+http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=39107278
+https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=med26&DO=10.1038%2fs41467-024-50159-6
 VL  - 15
 ID  - 154
 ER  - 
@@ -20470,7 +20502,6 @@ AU  - Mardis, E. R.
 AU  - Cottrell, C. E.
 DA  - Jun
 DO  - 10.1200/po-24-00910
-J2  - Jco Precision Oncology
 KW  - JOINT-CONSENSUS-RECOMMENDATION
 SEQUENCE VARIANTS
 ASSOCIATION
@@ -20484,7 +20515,7 @@ M3  - Article
 N1  - e2400910
 PY  - 2025
 ST  - Comprehensive Genomic Characterization of Congenital and Infantile Cancers Reveals High Yield of Medically Meaningful Findings
-T2  - JCO Precis. Oncol.
+T2  - JCO Precis Oncol
 TI  - Comprehensive Genomic Characterization of Congenital and Infantile Cancers Reveals High Yield of Medically Meaningful Findings
 VL  - 9
 ID  - 210
@@ -20536,9 +20567,11 @@ PY  - 2024
 SN  - 2574-3805
 SP  - e2424815
 ST  - Telehealth Parenting Program and Salivary Epigenetic Biomarkers in Preschool Children With Developmental Delay: NIMHD Social Epigenomics Program
-T2  - JAMA netw. open
+T2  - JAMA netw open
 TI  - Telehealth Parenting Program and Salivary Epigenetic Biomarkers in Preschool Children With Developmental Delay: NIMHD Social Epigenomics Program
-UR  - http://dx.doi.org/10.1001/jamanetworkopen.2024.24815http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=39073812https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=med26&DO=10.1001%2fjamanetworkopen.2024.24815
+UR  - http://dx.doi.org/10.1001/jamanetworkopen.2024.24815
+http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=39073812
+https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=med26&DO=10.1001%2fjamanetworkopen.2024.24815
 VL  - 7
 ID  - 147
 ER  - 
@@ -20943,7 +20976,9 @@ SP  - 104846
 ST  - DNA methylation signatures of prenatal socioeconomic position associated with 36-month language outcomes
 T2  - Res Dev Disabil
 TI  - DNA methylation signatures of prenatal socioeconomic position associated with 36-month language outcomes
-UR  - http://dx.doi.org/10.1016/j.ridd.2024.104846http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=39357175https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=med26&DO=10.1016%2fj.ridd.2024.104846
+UR  - http://dx.doi.org/10.1016/j.ridd.2024.104846
+http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=39357175
+https://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=med26&DO=10.1016%2fj.ridd.2024.104846
 VL  - 154
 ID  - 149
 ER  - 
@@ -21013,6 +21048,7 @@ LB  - 40428414
 PY  - 2025
 SN  - 2073-4425
 ST  - Characterizing the Social Epigenome in Mexican Patients with Early-Onset Psychosis
+T2  - Genes
 TI  - Characterizing the Social Epigenome in Mexican Patients with Early-Onset Psychosis
 UR  - http://dx.doi.org/10.3390/genes16050591
 http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?holding=inleurlib_fft&cmd=Retrieve&db=PubMed&dopt=Citation&list_uids=40428414
@@ -21120,7 +21156,6 @@ AU  - Miele, E.
 DA  - Feb
 DO  - 10.1016/j.modpat.2022.100039
 IS  - 2
-J2  - Modern Pathology
 KW  - BCOR
 diagnosis
 DNA methylation
@@ -21143,7 +21178,7 @@ N1  - 100039
 PY  - 2023
 SN  - 0893-3952
 ST  - Pediatric BCOR-Altered Tumors From Soft Tissue/Kidney Display Specific DNA Methylation Profiles
-T2  - Mod. Pathol.
+T2  - Mod Pathol
 TI  - Pediatric BCOR-Altered Tumors From Soft Tissue/Kidney Display Specific DNA Methylation Profiles
 VL  - 36
 ID  - 212
@@ -21421,6 +21456,7 @@ LB  - 40097805
 M3  - Article
 N1  - Oncogene L2033720991 2025-03-25 2025-06-10
 PY  - 2025
+DA  - Mar 17
 SN  - 1476-5594 0950-9232
 SP  - 1709-1717
 ST  - A urine DNA methylation assay for early detection of renal cancer
@@ -21450,7 +21486,6 @@ AU  - Ng, H. K.
 DA  - Jan
 DO  - 10.3390/cancers16010232
 IS  - 1
-J2  - Cancers
 KW  - children
 high-grade gliomas
 p53
@@ -21562,6 +21597,7 @@ LB  - 38769169
 M3  - Article
 N1  - Journal of Neuro-Oncology L2029871850 2024-05-24 2024-08-02
 PY  - 2024
+DA  - Aug
 SN  - 1573-7373 0167-594X
 SP  - 73-83
 ST  - Rapid DNA methylation-based classification of pediatric brain tumors from ultrasonic aspirate specimens
@@ -22256,6 +22292,7 @@ LB  - 40420380
 M3  - Article in Press
 N1  - Human molecular genetics L647478361 2025-06-09
 PY  - 2025
+DA  - Aug 16
 SN  - 1460-2083
 ST  - KDM2B variants in the CxxC domain impair its DNA-binding ability and cause a distinct neurodevelopmental syndrome
 T2  - Hum Mol Genet

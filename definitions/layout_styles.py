@@ -9,12 +9,15 @@ NAVBAR_STYLE = "background-color: #4a235a; color: white;"  # Dark purple, you ca
 # ------ PLOTTING ------------
 # Specify colors to use for categorical variables
 
-array_color_map = {'EPICv1': 'mediumpurple',
-                   '450k': 'darkgreen',
+array_color_map = {'450K': 'darkgreen',
+                   'EPICv1': 'mediumpurple',
+                   'EPICv2': 'darkblue',
+                   'Nanopore sequencing': 'black',
                    'Multiple (450K, EPICv1)': 'orange',  #'seagreen',
-                   'Multiple (450K, EPICv2)': 'darkblue',
                    'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': 'orange',
-                   'WGBS': 'magenta'}
+                   'Multiple (450K, EPICv2)': 'orange', 
+                   'Multiple (450K, EPICv1, PCR)': 'orange',
+                   'Multiple (450K, PCR)': 'orange'}
 
 # TODO: read colors directly from CSS file
 category_color_map = {'Biological markers': '#113ab7',

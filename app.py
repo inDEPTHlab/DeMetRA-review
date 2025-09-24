@@ -5,8 +5,7 @@ from shinywidgets import render_plotly
 
 import definitions.layout_styles as styles
 from definitions.backend_funcs import _count_papers, _count_mpss, _count_phenotypes, \
-    _filter_litreview_table, _style_litreview_table, \
-    _target_base_sankey, \
+    _filter_litreview_table, _single_sankey, \
     _multilevel_piechart, _mps_count_histogram, _category_over_years, \
     _publication_histogram, _publication_network, \
     _sample_size_over_time
@@ -104,7 +103,45 @@ def server(input, output, session):
     
     @render.plot(width=1300, height=1400)
     def sankey_target_base():
-        p = _target_base_sankey()
+        note = None
+
+        var = input.comparison_selected_variable()
+
+        if var == "Array":
+            right_order = ['450K', 'EPICv1', 'EPICv2', 'Nanopore sequencing',
+                           'Multiple (450K, EPICv1)',
+                           'Multiple (450K, GMEL (~3000 CpGs from EPICv1))',
+                           'Multiple (450K, EPICv2)']
+            left_order = ['450K', 'EPICv1',
+                          'Multiple (450K, EPICv1)', 
+                          'Multiple (450K, EPICv1, PCR)', 
+                          'Multiple (450K, PCR)']
+            note = '* ~3000 CpGs from EPICv1'
+        elif var == "Tissue":
+            right_order = ['Peripheral blood', 'Whole blood', 'Dried bloodspot', 'Blood-clots',
+                           'Cord blood', 'Saliva', 'Buccal cells', 'Tumour cells', 'Not reported'] 
+            left_order = ['Peripheral blood', 'Whole blood',
+                          'Cord blood',
+                          'Multiple (Cord blood, Dried bloodspot)',
+                          'Multiple (Cord blood, Whole blood)',
+                          'Multiple (Whole blood, HPCs)',
+                          'Buccal cells',
+                          'Leukocytes',
+                          'Tumour cells']
+        elif var == "Ancestry":
+            right_order = ['White', 'European', 'Mixed', 'Hispanic', 'African', 'Not reported']
+            left_order = ['White', 'European', 'Mixed', 'Hispanic', 'Not reported']
+        else: # Developmental period
+            right_order = ['Birth', 'Very early childhood', 'Early childhood', 'Mid childhood',
+                          'Late childhood', 'Childhood and adolescence', 'Adolescence', 'Not reported']
+            left_order = ['Birth', 'Mid childhood', 'Late childhood', 'Childhood',
+                          'Childhood and adolescence', 'Birth, Childhood and adolescence',
+                          'Adolescence', 'Adults', 'Not reported']
+
+        p = _single_sankey(var = var, left_order = left_order, right_order = right_order, 
+                           note = note)  
+
+        # p = _target_base_sankey()
         return p
     
     # ================ Sample size over time page =================
