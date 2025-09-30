@@ -96,7 +96,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -228,6 +228,12 @@ def _(
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_case', 'n Cases')
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_control', 'n Controls')
 
+    # Clean Dinesionality reduction ---------------------------------------------------------
+
+    lit_main['Including_CpGs_1'] = lit_main['Including_CpGs_1'].fillna('None')
+    lit_base['Including_CpGs_1'] = lit_base['Including_CpGs_1'].fillna('None')
+
+    # Add bibliography info -----------------------------------------------------------------
 
     lit_main = lit_main.rename(columns={'Author': 'Author_dirty', 
                                         'Journal': 'Journal_dirty',
@@ -297,6 +303,29 @@ def _(aggregate_values, mps_table):
     for _t in n_MPS.index:
         pub_table.loc[pub_table.Title == _t, 'n MPSs'] = int(n_MPS[_t])
     return (pub_table,)
+
+
+@app.cell
+def _(mps_base_matched, pub_table):
+    pub_table['Dimension reduction (1)'][pub_table['Dimension reduction (1)'].str.contains('Multiple (', regex=False
+                                                                                          )].value_counts()
+
+    mps_base_matched['Ancestry [development]'] = mps_base_matched['Ancestry [development]'].replace({
+        'Multiple (Association DNAm phenotype | P-value | ?, None)': '[Association DNAm phenotype | P-value | ?; None]',
+        'Multiple (Association DNAm phenotype | P-value | bonferroni < .05, Association DNAm phenotype | P-value | FDR < .05)': 'Association DNAm phenotype | P-value | [bonferroni < .05; FDR < .05]',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking 100, Association DNAm phenotype | P-value | top-ranking 1000, Association DNAm phenotype | P-value | top-ranking 10000, Association DNAm phenotype | P-value | top-ranking 20, Association DNAm phenotype | P-value | top-ranking 50, Association DNAm phenotype | P-value | top-ranking 500, Association DNAm phenotype | P-value | top-ranking 5000)': '',
+        'Multiple (Association DNAm phenotype | P-value | p < .1, Association DNAm phenotype | P-value | p < .01, Association DNAm phenotype | P-value | p < .001, Association DNAm phenotype | P-value | p < 1e-4, Association DNAm phenotype | P-value | p < 1e-5)': '',
+        'Multiple (Association DNAm phenotype | P-value | FDR < .05, None)': '',
+        'Multiple (None, Biological relevance | Functional annotation | Included in EpiSign)': '',
+        'Multiple (Association DNAm phenotype | P-value | p < .05, Association DNAm phenotype | P-value | adjusted p < .05)': '',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking ?, Association DNAm phenotype | P-value | top-ranking 200)': '',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking 1000, Association DNAm phenotype | P-value | top-ranking 900-1000)': '',
+        'Multiple (Association DNAm phenotype | Methylation change | > 15%, Association DNAm phenotype | Methylation change | > 5%, Association DNAm phenotype | Methylation change | > 20%, Association DNAm phenotype | Methylation change | > 10%, Association DNAm phenotype | Methylation change | > 25%)': '',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking 1000, None)': '',
+        'Multiple (Association DNAm phenotype | P-value | p < 1e-5, None)': '',
+        'Multiple (None, Association DNAm phenotype | P-value | Multiple cut-offs [thresholding])': '',
+        'Multiple (None, Biological relevance | Mean methylation | Zero variance)': ''})
+    return
 
 
 @app.cell
@@ -430,6 +459,11 @@ def _(targ_base_aggre):
 
     mps_base_matched['Developmental period [development]'] = mps_base_matched['Developmental period [development]'].replace({
         'Multiple (Childhood, Birth, Childhood and adolescence, Adolescence)': 'Multiple (Birth to Adolescence)'})
+
+    mps_base_matched['Ancestry [development]'] = mps_base_matched['Ancestry [development]'].replace({
+        'Multiple (Mixed, Australian, European)': 'Mixed', 
+        'Multiple (Mixed, White)': 'Mixed',
+        'Multiple (European, Mixed)': 'Mixed'})
     return (mps_base_matched,)
 
 
@@ -480,32 +514,33 @@ def _(mo, mps_base_matched, mps_table, pub_table):
                                  'Comparison', 'Missing_value_note', 'Covariates']
                                 ].rename(columns={'Phenotype': 'Phenotype(s)'})
 
-    mps_base_matched_clean = mps_base_matched[['Phenotype [application]', 'Phenotype [development]', 
-                                        'Category [application]', 'Category [development]', 
-                                        'Author', 'Year', 'Title', 
-                                        'n CpGs [application]', 'n CpGs [development]',
-                                        'Based on', 
-                                        'Sample size [application]', 'Sample size [development]', 
-                                        'n Cases [application]', 'n Cases [development]', 
-                                        'n Controls [application]', 'n Controls [development]', 
-                                        'Sample type [application]', 'Sample type [development]', 
-                                        'Developmental period [application]', 'Developmental period [development]', 
-                                        'Tissue [application]', 'Tissue [development]', 
-                                        'Array [application]', 'Array [development]', 
-                                        'Ancestry [application]', 'Ancestry [development]', 
-                                        'Dimension reduction (1) [application]', 'Dimension reduction (1) [development]', 
-                                        'Dimension reduction (2) [application]', 'Dimension reduction (2) [development]', 
-                                        'Dimension reduction (3) [application]', 'Dimension reduction (3) [development]', 
-                                        'Dimension reduction (4) [application]', 'Dimension reduction (4) [development]', 
-                                        'Dimension reduction (5) [application]', 'Dimension reduction (5) [development]', 
-                                        'Weights estimation [application]', 'Weights estimation [development]', 
-                                        'Internal validation [application]', 'Internal validation [development]', 
-                                        'External validation [application]', 'External validation [development]',
-                                        'Performance [application]', 'Performance [development]', 
-                                        'Comparison [application]', 'Comparison [development]', 
-                                        'Missing_value_note [application]', 'Missing_value_note [development]', 
-                                        'Covariates [application]', 'Covariates [development]',
-                                        'Sample_overlap_target_base [application]', 'Sample_overlap_target_base [development]']]
+    mps_base_matched_clean = mps_base_matched[[
+        'Phenotype [application]', 'Phenotype [development]', 
+        'Category [application]', 'Category [development]', 
+        'Author', 'Year', 'Title', 
+        'n CpGs [application]', 'n CpGs [development]',
+        'Based on', 
+        'Sample size [application]', 'Sample size [development]', 
+        'n Cases [application]', 'n Cases [development]', 
+        'n Controls [application]', 'n Controls [development]', 
+        'Sample type [application]', 'Sample type [development]', 
+        'Developmental period [application]', 'Developmental period [development]', 
+        'Tissue [application]', 'Tissue [development]', 
+        'Array [application]', 'Array [development]', 
+        'Ancestry [application]', 'Ancestry [development]', 
+        'Dimension reduction (1) [application]', 'Dimension reduction (1) [development]', 
+        'Dimension reduction (2) [application]', 'Dimension reduction (2) [development]', 
+        'Dimension reduction (3) [application]', 'Dimension reduction (3) [development]', 
+        'Dimension reduction (4) [application]', 'Dimension reduction (4) [development]', 
+        'Dimension reduction (5) [application]', 'Dimension reduction (5) [development]', 
+        'Weights estimation [application]', 'Weights estimation [development]', 
+        'Internal validation [application]', 'Internal validation [development]', 
+        'External validation [application]', 'External validation [development]',
+        'Performance [application]', 'Performance [development]', 
+        'Comparison [application]', 'Comparison [development]', 
+        'Missing_value_note [application]', 'Missing_value_note [development]', 
+        'Covariates [application]', 'Covariates [development]',
+        'Sample_overlap_target_base [application]', 'Sample_overlap_target_base [development]']]
 
     mo.ui.tabs({"Pubs table": pub_table_clean, "MPS table": mps_table_clean, "MPS table (base-matched)": mps_base_matched_clean})
     return mps_base_matched_clean, mps_table_clean, pub_table_clean
@@ -538,7 +573,7 @@ def _():
     return nx, pickle
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
 
     # Make cell wait for my input

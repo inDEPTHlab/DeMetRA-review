@@ -22,7 +22,7 @@ def _(mo):
     - The `MPS_table_cleaned.csv`
     - The `Publication_table_cleaned.csv`
 
-    Both are created by the `data_preprocessing.py` script.
+    Both are created by the `preprocessing/data_preprocessing.py` script.
     """
     )
     return
@@ -36,16 +36,21 @@ def _():
     import openpyxl
 
     from scipy.stats import spearmanr
+    import matplotlib.pyplot as plt
 
     assets_directory = './assets/'
-    return assets_directory, mo, pd, spearmanr
+
+    # import os
+    # os.getcwd()
+    return assets_directory, mo, np, pd, plt, spearmanr
 
 
 @app.cell
 def _(assets_directory, pd):
-    mps_table = pd.read_csv(f'{assets_directory}MPS_table_cleaned-tmp.csv')
-    pub_table = pd.read_csv(f'{assets_directory}Publication_table_cleaned-tmp.csv')
-    return mps_table, pub_table
+    mps_table = pd.read_csv(f'{assets_directory}MPS_table_cleaned.csv')
+    pub_table = pd.read_csv(f'{assets_directory}Publication_table_cleaned.csv')
+    mps_base_matched = pd.read_csv(f'{assets_directory}MPS_base_matched_cleaned.csv')
+    return mps_base_matched, mps_table, pub_table
 
 
 @app.cell
@@ -89,124 +94,195 @@ def _(mps_table):
     print('Total umber of phenotypes:', n_pheno)
     print(f'Number of phenotypes with more than one MPS: {n_pheno_rep} ({round(n_pheno_rep / n_pheno * 100)}%)')
     pheno_count_rep[pheno_count_rep > 9]
+
+
+    print(pheno_count.loc[pheno_count.index.str.contains('smoking'), ])
+    print(pheno_count.loc[pheno_count.index.str.contains('Kabuki'), ])
+
     pheno_count.sort_index()
+
     return
 
 
 @app.cell
-def _(mps_table, pd):
-    def get_count_percent(variable, data=mps_table, precision=0, print_count=True):
-        _counts = pd.DataFrame(data[variable].value_counts())
+def _(mps_base_matched, mps_table, pd, pub_table):
+    def get_count_percent(variable, dataset, precision=0):
+        _counts = pd.DataFrame(dataset[variable].value_counts())
         _total = _counts.sum()
         _counts['%'] = round(_counts / _total * 100, precision)
         _counts.index = _counts.index.map(lambda x: str(x) if isinstance(x, list) else x)
-        print('\n')
-        for _idx, _row in _counts.iterrows():
-            fmtcount = int(_row['count']) if print_count else ''
-            fmtpercent = int(_row['%']) if precision == 0 else _row['%']
-            print(f'{_idx} {fmtcount} ({fmtpercent}%)')
-    return (get_count_percent,)
+    
+        return(_counts)
+
+    def get_mps_pub_counts(variable, precision=0, pheno_count = True):
+    
+        mps_counts = get_count_percent(variable, mps_table, precision)
+        pub_counts = get_count_percent(variable, pub_table, precision)
+    
+        # print('\n')
+        for _idx, _row in mps_counts.iterrows():
+            fmt_mps_count = int(_row['count'])
+            fmt_mps_percent = int(_row['%']) if precision == 0 else _row['%']
+
+            _pub_count = pub_counts.loc[pub_counts.index.str.contains(_idx, regex=False), ]
+            fmt_pub_total = int(_pub_count['count'].sum())
+            fmt_pub_percent = int(_pub_count['%'].sum())
+        
+            if pheno_count:
+                # Also count number of unique phenotypes
+                pheno_counts = mps_table.loc[mps_table[variable]==_idx, 
+                    'Phenotype'].value_counts()
+                pheno_total = len(pheno_counts.index)
+                pheno_top = pheno_counts.index[:3]
+
+                addon = f'\n\tUnique pheno: {pheno_total}\ttop: {list(pheno_top)}\n'
+            else:
+                addon = '\n'
+
+            print(f'{_idx}\n'
+                  f'\tMPS: {fmt_mps_count} ({fmt_mps_percent}%)'
+                  f'\tPubs: {fmt_pub_total} ({fmt_pub_percent}%){addon}')
+
+    def get_base_mismatch(variable, df = mps_base_matched, exclude_from_mismatch=[],
+                          x=' [development]', y=' [application]'):
+    
+        df_subset = df.loc[df[f"{variable}{x}"] != df[f"{variable}{y}"], :]
+    
+        value_counts = pd.DataFrame((df_subset[f"{variable}{x}"].astype(str) +" --- "+ 
+                        df_subset[f"{variable}{y}"].astype(str)).value_counts())
+    
+        value_counts['%'] = round(value_counts / df.shape[0] * 100,1)
+
+        if len(exclude_from_mismatch) > 0: 
+            value_counts = value_counts.drop(index=exclude_from_mismatch)
+
+        print(f'Total mismatching: {round(value_counts['%'].sum(), 1)}%')
+    
+        return value_counts
+    return get_base_mismatch, get_count_percent, get_mps_pub_counts
 
 
 @app.cell
-def _(get_count_percent, pub_table):
-    get_count_percent('Category')
-    get_count_percent('Category', data=pub_table)
+def _(get_mps_pub_counts):
+    get_mps_pub_counts('Category')
     return
 
 
 @app.cell
-def _(get_count_percent):
-    get_count_percent('Based on')
+def _(get_mps_pub_counts):
+    get_mps_pub_counts('Based on')
     return
 
 
 @app.cell
-def _(get_count_percent, pub_table):
-    get_count_percent('Developmental period', precision=1)
-    get_count_percent('Developmental period', precision=1, data=pub_table)
+def _(
+    get_base_mismatch,
+    get_count_percent,
+    get_mps_pub_counts,
+    mps_base_matched,
+):
+    get_mps_pub_counts('Developmental period', precision=1)
+    print(get_count_percent('Developmental period [development]', mps_base_matched))
+    get_base_mismatch('Developmental period')
     return
 
 
 @app.cell
-def _(get_count_percent, mps_table):
-    get_count_percent("Tissue") #, print_count=False)
-
-    mps_table['Tissue'].astype(str).value_counts(dropna=False)
-
-    # a = sum([457, 35, 45, 26, 26, 3])
-    # b = sum([120, 20])
-    # c = sum([13, 6, 4, 1])
-    # d = 1
-    # 1
-    # for n in [a, b, c, d]:
-    #     print(f'{n} ({round(n / mps_table_1.shape[0] * 100, 1)}%)')
+def _(get_base_mismatch, get_mps_pub_counts):
+    get_mps_pub_counts("Tissue")
+    get_base_mismatch('Tissue', 
+                      exclude_from_mismatch=['Whole blood --- Peripheral blood',
+                                             'Whole blood --- Blood-clots',
+                                             'Whole blood --- Dried bloodspot',
+                                             'Whole blood --- Blood',
+                                             'Peripheral blood --- Blood-clots',
+                                             'Peripheral blood --- Whole blood',
+                                             'Blood --- Peripheral blood',
+                                             'Peripheral blood --- Blood'])
     return
 
 
 @app.cell
-def _(get_count_percent, mps_table, pd, pub_table):
-    print('MPS count')
-    get_count_percent('Category', precision=1)
-    print('\nPhenotype count\n', mps_table.groupby('Category')['Phenotype'].nunique())
-    pub_count_category = pd.DataFrame(mps_table.groupby('Category')['Title'].nunique())
-    pub_count_category['%'] =  round(pub_count_category / pub_table.shape[0] * 100, 1)
-
-    print('\nPublication count\n', pub_count_category)
-    mps_table[['Category', 'Phenotype']].value_counts().sort_index().reset_index()
+def _(get_base_mismatch, get_mps_pub_counts):
+    get_mps_pub_counts('Array')
+    get_base_mismatch('Array')
     return
 
 
 @app.cell
-def _(get_count_percent, pub_table):
-    get_count_percent('Sample type')
-    get_count_percent('Sample type', data=pub_table)
+def _(
+    get_base_mismatch,
+    get_count_percent,
+    get_mps_pub_counts,
+    mps_base_matched,
+):
+    get_mps_pub_counts('Ancestry')
+    print(get_count_percent('Ancestry [development]', mps_base_matched))
+    get_base_mismatch('Ancestry', exclude_from_mismatch=[
+        'European --- White',
+        'Mixed --- European',
+        'Mixed --- White',
+        'Hispanic --- European',
+        'White --- European'
+    ])
     return
 
 
 @app.cell
-def _(get_count_percent, pub_table):
-    get_count_percent('Array')
-    get_count_percent('Array', data=pub_table)
+def _(get_mps_pub_counts):
+    get_mps_pub_counts('Sample type')
     return
 
 
 @app.cell
-def _(get_count_percent, pub_table):
-    get_count_percent('Ancestry', precision=1)
-    get_count_percent('Ancestry', precision=1, data=pub_table)
+def _():
+    # get_mps_pub_counts('Sample_overlap_target_base')
     return
 
 
 @app.cell
-def _(get_count_percent):
-    get_count_percent('Sample_overlap_target_base')
+def _(mo, mps_table):
+    print(mps_table[['n CpGs','Sample size']].describe())
 
-    # get_count_percent('Sample_overlap_target_base', data=pub_table)
+    n_cpg_hist = mps_table['n CpGs'].hist(bins=100, figsize=(15, 4))
+    n_obs_hist = mps_table['Sample size'].hist(bins=100, figsize=(15, 4))
+
+    mo.ui.tabs({"n CpG": n_cpg_hist, "Sample size": n_obs_hist})
     return
 
 
 @app.cell
-def _(mps_table):
-    print(mps_table['n CpGs'].describe())
-    mps_table['n CpGs'].hist(bins=100, figsize=(15, 4))
-    return
+def _(mo, mps_table, np, plt, spearmanr):
+    from statsmodels.nonparametric.smoothers_lowess import lowess
 
+    def assess_relationship(x_var = 'Sample size', y_var ='n CpGs', data = mps_table, 
+                           outlier_exclusion=0, lowess_frac=0.4): 
+    
+        x = data[x_var]
+        y = data[y_var]
 
-@app.cell
-def _(mps_table):
-    print(mps_table['Sample size'].describe())
-    mps_table['Sample size'].hist(bins=100, figsize=(15, 4))
-    return
+        if outlier_exclusion:
+            x_thresh = x.quantile(outlier_exclusion)
+            y_thresh = y.quantile(outlier_exclusion)
 
+            x = x.where(x < x_thresh, np.nan)
+            y = y.where(y < y_thresh, np.nan)
 
-@app.cell
-def _(mps_table, plt, spearmanr):
-    r, p = spearmanr(mps_table['Sample size'], mps_table['n CpGs'], nan_policy='omit')
-    print('r =', round(r, 3), ', P = ', round(p, 3))
+        r, p = spearmanr(x, y, nan_policy='omit')
+        print('r =', round(r, 3), ', P = ', round(p, 3))
 
-    _fig, _ax = plt.subplots(figsize=(15, 6))
-    _ax.plot(mps_table['Sample size'], mps_table['n CpGs'], 'o')
+        fig, ax = plt.subplots(figsize=(15, 6))
+        ax.plot(x, y, 'o', alpha=0.5, color = 'royalblue')
+        ax.set_xlabel(x_var, fontweight = 'bold')
+        ax.set_ylabel(y_var, fontweight = 'bold')
+    
+        smoothed = lowess(y, x, frac=lowess_frac)  # frac = smoothing span
+        ax.plot(smoothed[:, 0], smoothed[:, 1], color='crimson', lw=1.5)
+
+        return(fig)
+
+    mo.ui.tabs({"Sample size vs. n CpG": assess_relationship(), 
+                "Sample size vs. n CpG (filtered)": assess_relationship(outlier_exclusion=0.95)}) 
     return
 
 
@@ -219,12 +295,14 @@ def _():
 
 @app.cell
 def _(mps_table, pd):
-    strategy_count = mps_table[['Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5']].notna().sum(axis=1)
+    strategy_count = mps_table[[f'Dimension reduction ({i})' for i in range(1, 6)]].notna().sum(axis=1)
     print(strategy_count.describe())
     strategy_count = strategy_count.value_counts().sort_index()
     _percent = (strategy_count / strategy_count.sum() * 100).round(1)
     print(pd.DataFrame({'count': strategy_count, '%': _percent}))
     print(round(_percent[2:].sum(), 1), '% of MPSs use > 1 strategy to include CpGs in the analysis.')
+
+    mps_table[[f'Dimension reduction ({i})' for i in range(1, 2)]].value_counts()
     return
 
 
@@ -235,76 +313,172 @@ def _(mo):
 
 
 @app.cell
-def _(mps_table):
-    def summarize_strategies(data=mps_table):
-        strategies = ['Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5']
-        for strategy in strategies:
-            print(data[strategy].value_counts().sort_index(), '\n')
-    summarize_strategies()
-    return (summarize_strategies,)
+def _(mo, mps_table, pd, pub_table):
+    def count_dimension_reduction_strategies(df = mps_table):
+    
+        strategies = [f'Dimension reduction ({i})' for i in range(1, 6)]
+
+        df = df[strategies]
+
+        df['Dimension reduction (1)'] = df['Dimension reduction (1)'].rename({'None': pd.NA})
+
+        # How many use more than 1 strategy
+        strategy_count = df[strategies].notna().sum(axis=1)
+
+        print(strategy_count.describe())
+
+        strategy_count = strategy_count.value_counts().sort_index()
+        _percent = (strategy_count / strategy_count.sum() * 100).round(1)
+        print(pd.DataFrame({'count': strategy_count, '%': _percent}))
+        print(round(_percent[2:].sum(), 1), '% of MPSs / pubs use > 1 strategy to include CpGs in the analysis.')
+
+
+    def summarize_dimension_reduction_strategies(df = mps_table):
+    
+        strategies = [f'Dimension reduction ({i})' for i in range(1, 6)]
+
+        tab_dict = {s: df[s].value_counts(dropna=False).sort_index() for s in strategies}
+
+        stacked_strategies = df[strategies].stack().reset_index(drop=True)
+        conbined_strategies = df[strategies].astype(str).agg(" --- ".join, axis=1)
+
+        tab_dict["All_strategies"] = stacked_strategies.value_counts(dropna=False).sort_index()
+    
+        tab_dict["Combined_strategies"] = conbined_strategies.value_counts(dropna=False)
+    
+        tabs = mo.ui.tabs(tab_dict)
+        return(tabs)
+
+
+    def filter_dimension_reduction_strategies(strategy, returns = 'None'):
+
+        strategies = [f'Dimension reduction ({i})' for i in range(1, 6)]
+
+        dfs = {'MPSs': mps_table, 'pubs': pub_table}
+        masked_dfs = {}
+    
+        for k, df in dfs.items():
+            mask = df[strategies].apply(lambda col: col.str.contains(strategy, na=False), axis=0).any(axis=1)
+            print(f'{df[mask].shape[0]} ({round(df[mask].shape[0] / df.shape[0] * 100, 1)}%) of {k} adopt {strategy}')
+            masked_dfs[k] = df.loc[mask, ['Title']+strategies]
+        
+        if returns != 'None': 
+            return masked_dfs[returns]
+        
+    # count_dimension_reduction_strategies()
+    count_dimension_reduction_strategies(pub_table)
+
+    summarize_dimension_reduction_strategies(pub_table)
+    return (
+        filter_dimension_reduction_strategies,
+        summarize_dimension_reduction_strategies,
+    )
 
 
 @app.cell
-def _(mps_table):
-    def filter_strategies(strategy, data=mps_table):
-        mask = data[['Including_CpGs_1', 'Including_CpGs_2', 'Including_CpGs_3', 'Including_CpGs_4', 'Including_CpGs_5']].apply(lambda col: col.str.contains(strategy, na=False), axis=0).any(axis=1)
-        print(f'{data[mask].shape[0]} ({round(data[mask].shape[0] / data.shape[0] * 100, 1)}%)')
-        return data[mask]
-    return (filter_strategies,)
-
-
-@app.cell
-def _(filter_strategies, summarize_strategies):
-    redundancy = filter_strategies('Pruning')
-    summarize_strategies(redundancy)
-
-    func_annot = filter_strategies('Functional annotation')
-    summarize_strategies(func_annot)
-
-    reproducible = filter_strategies('Reproducibility')
-    summarize_strategies(reproducible)
-
-    for _tab_entry in ['Association DNAm phenotype', 'Biological relevance', 'Pruning', 'Reproducibility']:
-        print('\n', _tab_entry)
-        filter_strategies(_tab_entry)
+def _(
+    filter_dimension_reduction_strategies,
+    summarize_dimension_reduction_strategies,
+):
+    summarize_dimension_reduction_strategies(
+        df = filter_dimension_reduction_strategies('Association DNAm phenotype', returns='pubs')
+    )
     return
 
 
 @app.cell
-def _(filter_strategies, pub_table, summarize_strategies):
-    stat_sign = filter_strategies('p-value|top-ranking significant probes', data=pub_table)
-    stat_sign = filter_strategies('top-ranking significant probes')
-    summarize_strategies(stat_sign)
+def _(filter_dimension_reduction_strategies):
+    print('Statistical significance')
+    filter_dimension_reduction_strategies('Association DNAm phenotype \\| P-value')
+    print('\nStatistical significance | top-ranking')
+    filter_dimension_reduction_strategies('Association DNAm phenotype \\| P-value \\| top-ranking')
+    print('\nEffect size')
+    filter_dimension_reduction_strategies('Association DNAm phenotype \\| Effect size \\| | Methylation change')
+    print('\nAUC')
+    filter_dimension_reduction_strategies('Association DNAm phenotype \\| AUC')
+    print('\nEffect size * p-value')
+    filter_dimension_reduction_strategies('Association DNAm phenotype \\| Effect size \\* P-value')
+
+    print('\nMultiple')
+    filter_dimension_reduction_strategies('Multiple | \\[')
+
     return
 
 
 @app.cell
-def _(filter_strategies, pub_table, summarize_strategies):
-    effect_size = filter_strategies('Actual change in methylation|Effect size|logFC', data=pub_table)
-    effect_size = filter_strategies('Actual change in methylation|Effect size|logFC')
-    summarize_strategies(effect_size)
+def _(
+    filter_dimension_reduction_strategies,
+    summarize_dimension_reduction_strategies,
+):
+    summarize_dimension_reduction_strategies(
+        df = filter_dimension_reduction_strategies('Pruning', returns='pubs')
+    )
     return
 
 
 @app.cell
-def _(filter_strategies, pub_table, summarize_strategies):
-    auc = filter_strategies('AUC', data=pub_table)
-    auc = filter_strategies('AUC')
-    summarize_strategies(auc)
+def _(filter_dimension_reduction_strategies):
+    print('Correlations')
+    filter_dimension_reduction_strategies('Pruning \\| Pairwise correlation|Pruning \\| R-squared')
+
+    print('\nCoMeBack')
+    filter_dimension_reduction_strategies('Pruning \\| CoMeBack')
+
+    print('\nStepwise selection')
+    filter_dimension_reduction_strategies('Pruning \\| Stepwise selection')
+
+    # 'Pruning | Multivariate regression'
+    # 'Pruning | Feature selection ML'
     return
 
 
 @app.cell
-def _(mps_table):
-    print(mps_table.Determining_weights_1.value_counts().sort_index())
+def _(
+    filter_dimension_reduction_strategies,
+    summarize_dimension_reduction_strategies,
+):
+    summarize_dimension_reduction_strategies(
+        df = filter_dimension_reduction_strategies('Reproducibility', returns='pubs')
+    )
+    return
 
+
+@app.cell
+def _(filter_dimension_reduction_strategies):
+    filter_dimension_reduction_strategies('Reproducibility \\| Array')
+    filter_dimension_reduction_strategies('Reproducibility \\| Tissue')
+    return
+
+
+@app.cell
+def _(
+    filter_dimension_reduction_strategies,
+    summarize_dimension_reduction_strategies,
+):
+    print('Functional annotation')
+    filter_dimension_reduction_strategies('Biological relevance \\| Functional annotation')
+
+    summarize_dimension_reduction_strategies(
+        df = filter_dimension_reduction_strategies('Biological relevance', returns='pubs')
+    )
+    return
+
+
+@app.cell
+def _(mps_table, pub_table):
     def filter_models(model, data=mps_table):
-        mask = data['Determining_weights_1'].str.contains(model, na=False)
-        print(model)
+        mask = data['Weights estimation'].str.contains(model, na=False)
+    
         print(f'{data[mask].shape[0]} ({round(data[mask].shape[0] / data.shape[0] * 100, 1)}%)')
         return data[mask]
+    
     for _tab_entry in ['Discovery EWAS', 'Machine learning', 'Penalized regression']:
+        print(_tab_entry)
         filter_models(_tab_entry)
+        filter_models(_tab_entry, data = pub_table)
+
+    mps_table['Weights estimation'].value_counts().sort_index()
+    # pub_table['Weights estimation'].value_counts().sort_index()
     return
 
 
@@ -317,16 +491,42 @@ def _():
 
 
 @app.cell
-def _(mps_table, pub_table):
-    print(mps_table.Sample_overlap_target_base.value_counts().sort_index(), '\n')
-    print(pub_table.Sample_overlap_target_base.value_counts().sort_index())
+def _(mo):
+    mo.md(r"""### Validation""")
     return
 
 
 @app.cell
-def _(mo):
-    mo.md(r"""### Validation""")
+def _(mps_table, pub_table):
+    def crosstab_count(df = mps_table):
+        no_validation = df.loc[(df['Internal validation'] == 'No') & (df['External validation'] == 'No'),].shape[0]
+        print(f'{no_validation} ({round(no_validation / df.shape[0] * 100, 1)}%) do not use any validation method')
+
+    crosstab_count()
+    crosstab_count(pub_table)
     return
+
+
+@app.cell
+def _(count_containing, pub_table):
+    count_containing('Yes', 'External validation')
+    count_containing('Yes', 'External validation', pub_table)
+    # get_mps_pub_counts('External validation')
+    return
+
+
+@app.cell
+def _(get_mps_pub_counts, mps_table, pub_table):
+    def count_containing(term, var, df = mps_table):
+        count = df.loc[df[var].str.contains(term, na=False),]
+        print(f'{count.shape[0]} ({round(count.shape[0] / df.shape[0] * 100, 1)}%) have {var} ~= {term}')
+
+
+    # Internal validation
+    count_containing('Yes|validation|split', 'Internal validation')
+    count_containing('Yes|validation|split', 'Internal validation', pub_table)
+    get_mps_pub_counts('Internal validation')
+    return (count_containing,)
 
 
 @app.cell
