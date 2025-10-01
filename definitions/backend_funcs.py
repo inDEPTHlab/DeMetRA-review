@@ -598,7 +598,7 @@ def display_match(ax, match, fs=22, note=None):
 
 
 def _single_sankey(var, right_label_order, left_label_order, note=None,
-                   filter = None,
+                   filter = None, color_maps = styles.COLOR_MAPS, 
                    fig_width=8, fig_height=10):
     '''Draw a single sankey diagram for a given variable'''
 
@@ -609,7 +609,7 @@ def _single_sankey(var, right_label_order, left_label_order, note=None,
 
     fss={'sm': 8, 'l': 11, 'xl': 21}
 
-    color_dict = styles.COLOR_MAPS[var]
+    color_dict = color_maps[var]
 
     right_labels = {label: {'color': color_dict[label]} for label in right_label_order}
     left_labels = {label: {'color': color_dict[label]} for label in left_label_order}
@@ -626,94 +626,6 @@ def _single_sankey(var, right_label_order, left_label_order, note=None,
     fig.subplots_adjust(left=0.25, right=0.75, bottom=0.1, top=0.9)
 
     return fig
-    
-   
-
-# OLD PLOT WITH ALL 4 SANKY DIAGRAMS
-def _target_base_sankey(fig_width=20, fig_height=30):
-
-    fss={'sm': 8, 'l': 11, 'xl': 21}
-    
-    fig, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(fig_width, fig_height),
-                                  height_ratios=[1,.27, 1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
-   
-    a = sankey(axs['A'], var='Array', 
-            right_labels = {'450K': {'color': 'darkgreen'}, 
-                        'EPICv1': {'color': 'mediumpurple'},
-                        'EPICv2': {'color': 'darkblue'},
-                        'Nanopore sequencing': {'color': 'black'},
-                        'Multiple (450K, EPICv1)': {'color': 'orange'},
-                        'Multiple (450K, GMEL (~3000 CpGs from EPICv1))': {'color': 'orange'},
-                        'Multiple (450K, EPICv2)': {'color': 'orange'}},
-            left_labels = {'450K': {'color': 'darkgreen'}, 
-                        'EPICv1': {'color': 'mediumpurple'},
-                        'Multiple (450K, EPICv1)': {'color': 'orange'},
-                        'Multiple (450K, EPICv1, PCR)': {'color': 'orange'},
-                        'Multiple (450K, PCR)': {'color': 'orange'}}, fss=fss)
-
-    display_match(axs['a'], a, fs=fss['l'], note='* ~3000 CpGs from EPICv1')
-
-    b = sankey(axs['B'], var='Tissue',
-            right_labels = {'Peripheral blood': {'color':'crimson'},
-                            'Whole blood': {'color':'crimson'},
-                            'Dried bloodspot': {'color':'crimson'},
-                            'Blood-clots': {'color':'crimson'},
-                            'Cord blood': {'color':'darkred'},
-                            'Saliva': {'color':'lightblue'},
-                            'Buccal cells': {'color':'teal'},
-                            'Tumour cells': {'color':'orange'},
-                            'Not reported': {'color':'grey'}}, 
-            left_labels = {'Peripheral blood': {'color':'crimson'},
-                            'Whole blood': {'color':'crimson'},
-                            'Cord blood': {'color':'darkred'},
-                            'Multiple (Cord blood, Dried bloodspot)': {'color':'crimson'},
-                            'Multiple (Cord blood, Whole blood)': {'color':'crimson'},
-                            'Multiple (Whole blood, HPCs)': {'color':'crimson'},
-                            'Buccal cells': {'color':'teal'},
-                            'Leukocytes': {'color':'mediumpurple'},
-                            'Tumour cells': {'color':'orange'}}, fss=fss)
-
-    display_match(axs['b'], b, fs=fss['l'])
-
-    c = sankey(axs['C'], var='Ancestry',
-            right_labels = {'White': {'color':'pink'}, 
-                            'European': {'color':'pink'}, 
-                            'Mixed': {'color':'purple'}, 
-                            'Hispanic': {'color': 'orange'},
-                            'African': {'color':'crimson'},
-                            'Not reported': {'color': 'grey'}}, 
-            left_labels = {'White': {'color':'pink'},
-                            'European': {'color':'pink'},
-                            'Mixed': {'color':'purple'}, 
-                            'Hispanic': {'color': 'orange'},
-                            'Not reported': {'color':'grey'}}, fss=fss)
-
-    display_match(axs['c'], c, fs=fss['l'])
-
-
-    d = sankey(axs['D'], var='Developmental period',
-            right_labels = {'Birth': {'color':'darkblue'}, 
-                'Very early childhood': {'color':'#4132d4'}, 
-                'Early childhood': {'color':'#4132d4'},
-                'Mid childhood': {'color':'#7566ff'}, 
-                'Late childhood': {'color':'#beb7ff'}, 
-                'Childhood and adolescence': {'color':'#f0cdff'}, 
-                'Adolescence': {'color':'purple'},
-                'Not reported': {'color':'grey'}},
-            left_labels = {'Birth': {'color':'darkblue'}, 
-                    'Mid childhood': {'color':'#7566ff'}, 
-                    'Late childhood': {'color':'#beb7ff'}, 
-                    'Childhood': {'color':'blue'},
-                    'Childhood and adolescence': {'color':'#f0cdff'}, 
-                    'Birth, Childhood and adolescence': {'color':'#7b07d0'},
-                    'Adolescence': {'color':'purple'},
-                    'Adults':{'color':'teal'},
-                    'Not reported': {'color':'grey'}}, fss=fss)
-
-    display_match(axs['d'], d, fs=fss['l'])
-
-    return fig
-
 
 def _sample_size_over_time(data=mps_table, color_by='Category', 
                            log_sample_size=True, model_type="ols", scope="overall"):

@@ -163,6 +163,8 @@ def _(inspect_variable_levels, rev_data):
 @app.cell
 def _(inspect_variable_levels, rev_data):
     inspect_variable_levels(var = "Sample_overlap_target_base", **rev_data)
+
+    # print(f'{round(276 / (276 + 19),2)} {round(19 / (276 + 19),2)}')
     return
 
 

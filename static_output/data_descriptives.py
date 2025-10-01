@@ -111,14 +111,14 @@ def _(mps_base_matched, mps_table, pd, pub_table):
         _total = _counts.sum()
         _counts['%'] = round(_counts / _total * 100, precision)
         _counts.index = _counts.index.map(lambda x: str(x) if isinstance(x, list) else x)
-    
+
         return(_counts)
 
     def get_mps_pub_counts(variable, precision=0, pheno_count = True):
-    
+
         mps_counts = get_count_percent(variable, mps_table, precision)
         pub_counts = get_count_percent(variable, pub_table, precision)
-    
+
         # print('\n')
         for _idx, _row in mps_counts.iterrows():
             fmt_mps_count = int(_row['count'])
@@ -127,7 +127,7 @@ def _(mps_base_matched, mps_table, pd, pub_table):
             _pub_count = pub_counts.loc[pub_counts.index.str.contains(_idx, regex=False), ]
             fmt_pub_total = int(_pub_count['count'].sum())
             fmt_pub_percent = int(_pub_count['%'].sum())
-        
+
             if pheno_count:
                 # Also count number of unique phenotypes
                 pheno_counts = mps_table.loc[mps_table[variable]==_idx, 
@@ -145,19 +145,19 @@ def _(mps_base_matched, mps_table, pd, pub_table):
 
     def get_base_mismatch(variable, df = mps_base_matched, exclude_from_mismatch=[],
                           x=' [development]', y=' [application]'):
-    
+
         df_subset = df.loc[df[f"{variable}{x}"] != df[f"{variable}{y}"], :]
-    
+
         value_counts = pd.DataFrame((df_subset[f"{variable}{x}"].astype(str) +" --- "+ 
                         df_subset[f"{variable}{y}"].astype(str)).value_counts())
-    
+
         value_counts['%'] = round(value_counts / df.shape[0] * 100,1)
 
         if len(exclude_from_mismatch) > 0: 
             value_counts = value_counts.drop(index=exclude_from_mismatch)
 
         print(f'Total mismatching: {round(value_counts['%'].sum(), 1)}%')
-    
+
         return value_counts
     return get_base_mismatch, get_count_percent, get_mps_pub_counts
 
@@ -257,7 +257,7 @@ def _(mo, mps_table, np, plt, spearmanr):
 
     def assess_relationship(x_var = 'Sample size', y_var ='n CpGs', data = mps_table, 
                            outlier_exclusion=0, lowess_frac=0.4): 
-    
+
         x = data[x_var]
         y = data[y_var]
 
@@ -275,7 +275,7 @@ def _(mo, mps_table, np, plt, spearmanr):
         ax.plot(x, y, 'o', alpha=0.5, color = 'royalblue')
         ax.set_xlabel(x_var, fontweight = 'bold')
         ax.set_ylabel(y_var, fontweight = 'bold')
-    
+
         smoothed = lowess(y, x, frac=lowess_frac)  # frac = smoothing span
         ax.plot(smoothed[:, 0], smoothed[:, 1], color='crimson', lw=1.5)
 
@@ -315,7 +315,7 @@ def _(mo):
 @app.cell
 def _(mo, mps_table, pd, pub_table):
     def count_dimension_reduction_strategies(df = mps_table):
-    
+
         strategies = [f'Dimension reduction ({i})' for i in range(1, 6)]
 
         df = df[strategies]
@@ -334,7 +334,7 @@ def _(mo, mps_table, pd, pub_table):
 
 
     def summarize_dimension_reduction_strategies(df = mps_table):
-    
+
         strategies = [f'Dimension reduction ({i})' for i in range(1, 6)]
 
         tab_dict = {s: df[s].value_counts(dropna=False).sort_index() for s in strategies}
@@ -343,9 +343,9 @@ def _(mo, mps_table, pd, pub_table):
         conbined_strategies = df[strategies].astype(str).agg(" --- ".join, axis=1)
 
         tab_dict["All_strategies"] = stacked_strategies.value_counts(dropna=False).sort_index()
-    
+
         tab_dict["Combined_strategies"] = conbined_strategies.value_counts(dropna=False)
-    
+
         tabs = mo.ui.tabs(tab_dict)
         return(tabs)
 
@@ -356,15 +356,15 @@ def _(mo, mps_table, pd, pub_table):
 
         dfs = {'MPSs': mps_table, 'pubs': pub_table}
         masked_dfs = {}
-    
+
         for k, df in dfs.items():
             mask = df[strategies].apply(lambda col: col.str.contains(strategy, na=False), axis=0).any(axis=1)
             print(f'{df[mask].shape[0]} ({round(df[mask].shape[0] / df.shape[0] * 100, 1)}%) of {k} adopt {strategy}')
             masked_dfs[k] = df.loc[mask, ['Title']+strategies]
-        
+
         if returns != 'None': 
             return masked_dfs[returns]
-        
+
     # count_dimension_reduction_strategies()
     count_dimension_reduction_strategies(pub_table)
 
@@ -468,10 +468,10 @@ def _(
 def _(mps_table, pub_table):
     def filter_models(model, data=mps_table):
         mask = data['Weights estimation'].str.contains(model, na=False)
-    
+
         print(f'{data[mask].shape[0]} ({round(data[mask].shape[0] / data.shape[0] * 100, 1)}%)')
         return data[mask]
-    
+
     for _tab_entry in ['Discovery EWAS', 'Machine learning', 'Penalized regression']:
         print(_tab_entry)
         filter_models(_tab_entry)
@@ -521,7 +521,6 @@ def _(get_mps_pub_counts, mps_table, pub_table):
         count = df.loc[df[var].str.contains(term, na=False),]
         print(f'{count.shape[0]} ({round(count.shape[0] / df.shape[0] * 100, 1)}%) have {var} ~= {term}')
 
-
     # Internal validation
     count_containing('Yes|validation|split', 'Internal validation')
     count_containing('Yes|validation|split', 'Internal validation', pub_table)
@@ -530,20 +529,141 @@ def _(get_mps_pub_counts, mps_table, pub_table):
 
 
 @app.cell
-def _(mps_table):
-    no_validation = mps_table.loc[(mps_table.Independent_validation == 'No') & (mps_table.Train_test == 'No'),].shape[0]
-    print(f'{no_validation} ({round(no_validation / mps_table.shape[0] * 100, 1)}%) do not use any validation method')
-    ext_validation = mps_table.loc[mps_table.Independent_validation.str.contains('Yes', na=False),]
-    print(f'{ext_validation.shape[0]} ({round(ext_validation.shape[0] / mps_table.shape[0] * 100, 1)}%) MPSs perform external validation')
-    int_validation = mps_table.loc[(mps_table.Train_test != 'No') & mps_table.Train_test.notna(),]
-    print(f'{int_validation.shape[0]} ({round(int_validation.shape[0] / mps_table.shape[0] * 100, 1)}%) MPSs perform internal validation')
+def _(mo):
+    mo.md(r"""## Table""")
     return
 
 
 @app.cell
-def _(get_count_percent):
-    get_count_percent('Train_test')
-    # print(pub_table.Train_test.value_counts().sort_index())
+def _(mps_table, pub_table):
+    print(pub_table.shape[0], mps_table.shape[0])
+    return
+
+
+@app.cell
+def _(mps_table, pd):
+    def get_simple_counts(var, precision = 0, df = mps_table, groups=None):
+
+        if groups is not None: 
+            group_map = {item: group for group, items in groups.items() for item in items}
+            var_col = df[var].replace(group_map)
+        else: 
+            var_col = df[var]
+        
+        counts = pd.DataFrame(var_col.value_counts())
+        _perc = round(counts['count'] / df.shape[0] * 100, precision)
+        if precision == 0:
+            _perc = [int(i) for i in _perc]
+        counts['count'] = [f'{c} ({p}%)' for c, p in zip(counts['count'], _perc)]
+        return counts
+
+    def get_median_range(var, precision = 0, df = mps_table):
+        desc = pd.DataFrame(df[var].describe()[['min','50%','max']])
+        if precision == 0:
+            desc[var] = desc[var].astype(int)
+        return f'{desc.loc['50%',var]} [{desc.loc['min',var]}; {desc.loc['max',var]}]'
+    return get_median_range, get_simple_counts
+
+
+@app.cell
+def _(get_simple_counts, pub_table):
+    get_simple_counts('Sample type', df = pub_table)
+    return
+
+
+@app.cell
+def _(get_median_range, pub_table):
+    get_median_range('n MPSs', df = pub_table)
+    return
+
+
+@app.cell
+def _(get_simple_counts):
+    get_simple_counts('Category')
+    return
+
+
+@app.cell
+def _(mps_table, np, pd):
+
+    def validation_crosstab(df = mps_table):
+        df['internal'] = np.where(df['Internal validation'].str.contains('Yes|validation|split', na=False), 'yes', 'no')
+        df['external'] = np.where(df['External validation'].str.contains('Yes', na=False), 'yes', 'no')
+
+        counts = pd.DataFrame(df[['internal','external']].value_counts())
+        _perc = round(counts['count'] / df.shape[0] * 100, 0)
+        _perc = [int(i) for i in _perc]
+        counts['count'] = [f'{c} ({p}%)' for c, p in zip(counts['count'], _perc)]
+        return(counts)
+    
+        # print(f'{count.shape[0]} ({round(count.shape[0] / df.shape[0] * 100, 1)}%) have {var} ~= {term}')
+    validation_crosstab()
+    return
+
+
+@app.cell
+def _(get_simple_counts):
+    get_simple_counts('Based on')
+    return
+
+
+@app.cell
+def _(get_simple_counts):
+    get_simple_counts('Tissue', groups = {'Blood derived': ['Peripheral blood', 'Whole blood', 'Dried bloodspot', 'Blood-clots', 'Blood', 'Leukocytes', 'Cord blood'],
+                                          'Saliva and buccal': ['Saliva', 'Buccal cells'],
+                                          'Other': ['Placenta', 'Tumour cells', 'Nasal epithelial cells', 'Cervical cells', 'Urine']
+                                         })
+    return
+
+
+@app.cell
+def _(get_simple_counts):
+    get_simple_counts('Array', groups = {'Multiple': ['Multiple (450K, EPICv1)', 
+                                                      'Multiple (450K, GMEL (~3000 CpGs from EPICv1))', 'Multiple (450K, EPICv2)']})
+    return
+
+
+@app.cell
+def _(get_simple_counts):
+    get_simple_counts('Ancestry', groups = {'European / White': ['European', 'White'], 
+                                            'Latinx / Hispanic': ['Latinx', 'Hispanic']})
+    return
+
+
+@app.cell
+def _(get_simple_counts):
+    get_simple_counts('Developmental period')
+    return
+
+
+@app.cell
+def _(filter_dimension_reduction_strategies):
+    drgroups = ['Association DNAm phenotype', 'Biological relevance', 'Pruning', 'Reproducibility']
+
+    for g in drgroups: 
+        filter_dimension_reduction_strategies(g)
+
+
+    return
+
+
+@app.cell
+def _(get_median_range):
+    get_median_range('n CpGs')
+    return
+
+
+@app.cell
+def _(get_simple_counts, mps_table):
+
+    def make_dict(labels, var = mps_table['Weights estimation']): 
+        out_dict = {}
+        for lab in labels:
+            out_dict[lab] = list(var.loc[var.str.contains(lab, na=False)].unique())
+        return out_dict
+
+    wegroups = make_dict(['Penalized regression', 'Discovery EWAS', 'Machine learning'])
+    get_simple_counts('Weights estimation', groups = wegroups)
     return
 
 
