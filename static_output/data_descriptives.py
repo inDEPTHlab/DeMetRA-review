@@ -35,10 +35,13 @@ def _():
     import numpy as np
     import openpyxl
 
+    from pyprojroot.here import here
+
     from scipy.stats import spearmanr
     import matplotlib.pyplot as plt
 
-    assets_directory = './assets/'
+    proj_folder = str(here())
+    assets_directory = f'{proj_folder}/assets/'
 
     # import os
     # os.getcwd()
@@ -549,7 +552,7 @@ def _(mps_table, pd):
             var_col = df[var].replace(group_map)
         else: 
             var_col = df[var]
-        
+
         counts = pd.DataFrame(var_col.value_counts())
         _perc = round(counts['count'] / df.shape[0] * 100, precision)
         if precision == 0:
@@ -595,7 +598,7 @@ def _(mps_table, np, pd):
         _perc = [int(i) for i in _perc]
         counts['count'] = [f'{c} ({p}%)' for c, p in zip(counts['count'], _perc)]
         return(counts)
-    
+
         # print(f'{count.shape[0]} ({round(count.shape[0] / df.shape[0] * 100, 1)}%) have {var} ~= {term}')
     validation_crosstab()
     return
@@ -678,13 +681,6 @@ def _(mps_table, pub_table):
 def _(mps_table, pub_table):
     print(mps_table.Missing_value_note.value_counts().sort_index(), '\n')
     print(pub_table.Missing_value_note.value_counts().sort_index())
-    return
-
-
-@app.cell
-def _(mps_table, pub_table):
-    print(mps_table.Reflect_phenotype.value_counts().sort_index(), '\n')
-    print(pub_table.Reflect_phenotype.value_counts().sort_index())
     return
 
 

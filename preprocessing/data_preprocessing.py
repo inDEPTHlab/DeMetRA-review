@@ -30,12 +30,15 @@ def _(mo):
 def _():
     import marimo as mo
 
+    from pyprojroot.here import here
+
     import pandas as pd
     import numpy as np
 
     from data_preprocessing_helpers import read_sys_review, read_bibliography, inspect_variable_levels, summarize_dimension_reduction_strategies, count_categories_per_phenotype, replace_multiples, clean_n_CpGs, coerce_to_numeric, aggregate_values
 
-    assets_directory = './assets/'
+    proj_folder = str(here())
+    assets_directory = f'{proj_folder}/assets/'
 
     sys_review_file = 'MPS_review_systematic_2025-08-14.xlsx' # 'MPS_review_systematic_2025-02-14.xlsx'
     bibliograp_file = 'Bibliography_2025-07-25.txt'
@@ -195,6 +198,8 @@ def _(mo):
        I also remove 2 scores that have `Number of CpGs == 0` (because they did not identify a solution).
 
     5. Clean the **"Sample size"** columns so that they are all numeric.
+
+    7. Remove scores that have used "Counts" a method for calculating weights
     """
     )
     return
@@ -229,6 +234,10 @@ def _(
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_total', 'Sample size')
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_case', 'n Cases')
     lit_base = coerce_to_numeric(lit_base, 'Sample_size_control', 'n Controls')
+
+    # Clean Methodology ---------------------------------------------------------------------
+    # Remove MPSs that were calculated by "counting"
+    lit_main = lit_main.loc[~lit_main['Determining_weights_1'].str.contains('Count', na=False),]
 
     # Clean Dinesionality reduction ---------------------------------------------------------
 

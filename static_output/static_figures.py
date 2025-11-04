@@ -1,7 +1,9 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
+#     "kaleido==1.1.0",
 #     "openpyxl==3.1.5",
+#     "pyprojroot==0.3.0",
 #     "upsetplot==0.9.0",
 # ]
 # ///
@@ -16,6 +18,9 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
 
+    from pyprojroot.here import here
+    import sys
+
     import pandas as pd
     import numpy as np
     import openpyxl
@@ -25,21 +30,42 @@ def _():
     import matplotlib.colors as mcolors
     import colorsys
     from upsetplot import UpSet, from_indicators
+    from PIL import Image
+    import kaleido
 
-    assets_directory = './assets/'
-    output_directory = './static_output/'
+    proj_folder = str(here())
+
+    sys.path.append(proj_folder)
+    from definitions.backend_funcs import _multilevel_piechart
+
+    savefigs = mo.ui.switch(label="Save figures")
     return (
         UpSet,
-        assets_directory,
         colorsys,
         from_indicators,
         mcolors,
         mo,
         np,
-        output_directory,
         pd,
         plt,
+        proj_folder,
+        savefigs,
     )
+
+
+@app.cell
+def _(plt, proj_folder, savefigs):
+    assets_directory = f'{proj_folder}/assets/'
+    output_directory = f'{proj_folder}/static_output/'
+
+    output_format = 'tiff'
+    output_resolution = 300
+
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = ["Verdana"]
+
+    savefigs
+    return assets_directory, output_directory, output_format, output_resolution
 
 
 @app.cell
@@ -52,14 +78,14 @@ def _(assets_directory, pd):
 
 
 @app.cell
-def _(plt):
-    plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = ["Verdana"]
-    return
-
-
-@app.cell
-def _(mps_table, np):
+def _(
+    mps_table,
+    np,
+    output_directory,
+    output_format,
+    output_resolution,
+    savefigs,
+):
 
     # Number of publication line
     pub_count = mps_table.groupby('Year').Title.nunique()
@@ -96,15 +122,45 @@ def _(mps_table, np):
     f0.set_ylabel('Number of publications', fontsize=12, fontweight='bold', labelpad=10)
     f0.set_xlabel('Year', fontsize=12, fontweight='bold', labelpad=10)
 
-    # f0.figure.savefig(f'./static_output/Figure0_MPS-pubs-per-year.png', dpi=300, bbox_inches='tight')
+    if (savefigs.value): 
+        f0.figure.savefig(f'{output_directory}Figure0_MPS-pubs-per-year.{output_format}', dpi=output_resolution, bbox_inches='tight')
+
     f0
     return
 
 
 @app.cell
-def _(plt, single_sankey):
-    # Figure 3 
+def _(output_directory, output_format, savefigs):
+    # Figure2
+    f2 = _multilevel_piechart()
 
+    f2.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+
+    if (savefigs.value):
+        # plotly does not have a tiff output by default
+        if output_format != 'tiff':
+            f2.write_image(f'{output_directory}Figure2_piechart.{output_format}')
+        else: # workaround
+            f2.write_image(f'{output_directory}Figure2_piechart.pdf', scale=1.1)
+            # Open the saved PNG image
+            # img = Image.open(f'{output_directory}Figure2_piechart.pdf')
+            # Save as TIFF
+            # img.save(f'{output_directory}Figure2_piechart.tiff', format="TIFF") 
+
+    f2
+    return
+
+
+@app.cell
+def _(
+    output_directory,
+    output_format,
+    output_resolution,
+    plt,
+    savefigs,
+    single_sankey,
+):
+    # Figure 3 
     f3, axs = plt.subplot_mosaic('AB;ab;CD;cd', figsize=(20, 25),
                                  height_ratios=[1,.27]*2, gridspec_kw=dict(hspace=0, wspace=1.2))
 
@@ -148,8 +204,16 @@ def _(plt, single_sankey):
                    right_label_order = ['Birth', 'Very early childhood', 'Early childhood', 'Mid childhood',
                                       'Late childhood', 'Childhood', 'Childhood and adolescence', 'Adolescence', 
                                       'Not reported'], fss=fss)
+    if (savefigs.value): 
+        f3.savefig(f'{output_directory}Figure3_dev-app-sankey.{output_format}', dpi=output_resolution, bbox_inches='tight')
 
-    # f3.savefig('./static_output/Figure3_dev-app-sankey.png', dpi=300, bbox_inches='tight')
+    f3
+    return
+
+
+@app.cell
+def _():
+    # Figure 4
     return
 
 
@@ -194,53 +258,40 @@ def _(from_indicators, mo, mps_table, np, pd):
 
 
 @app.cell
-def _(UpSet, drs_membership, mcolors, output_directory, split_drs_clean):
+def _(UpSet, drs_membership, mcolors, split_drs_clean):
     f4a = UpSet(drs_membership, subset_size='count', sort_by='cardinality', sort_categories_by='-cardinality')
 
     category_methods = split_drs_clean.groupby('category').method.unique().to_dict()
     category_colors = {'Association DNAm phenotype': 'crimson',
                        'Biological relevance': 'navy',
-                       'Pruning': 'purple',
-                       'Reproducibility': 'green'}
+                       'Pruning': '#ca9dd6',
+                       'Reproducibility': '#ffbe4f'}
     for category in category_methods.keys():
         f4a.style_categories(categories=category_methods[category], bar_facecolor=category_colors[category],
                              shading_facecolor = mcolors.to_rgba(category_colors[category], alpha=0.2))
-    axplot = f4a.plot()['matrix']
+    f4a_main = f4a.plot()['matrix'].figure
 
-    axplot.figure.savefig(f'{output_directory}Figure4A.png', dpi = 300)
-    return (category_colors,)
+    # f4a_main.figure.savefig(f'{output_directory}Figure4A.png', dpi = 300)
+    return category_colors, f4a_main
 
 
 @app.cell
 def _(category_colors, plt):
-    fig, ax = plt.subplots(figsize=(4, len(category_colors) * 0.7))
+    f4a_leg, ax = plt.subplots(figsize=(4, len(category_colors) * 0.7))
 
     for i, (label, color) in enumerate(category_colors.items()):
         ax.scatter(0, i, s=400, color=color)  # s=400 for big dot
         ax.text(0.2, i, label, va="center", fontsize=15)
 
-    ax.set_xlim(-0.1, 1)
+    ax.set_xlim(-0.15, 2.5)
     ax.set_ylim(-0.5, len(category_colors) - 0.5)
     ax.invert_yaxis()
-    ax.axis("off")  # Hide axes
-
-    fig
-    return
+    ax.axis("off"); # Hide axes
+    return (f4a_leg,)
 
 
 @app.cell
-def _(colorsys, mcolors, mps_table, np, output_directory, plt):
-    def generate_palette(base_color, n, min_light=0.35, max_light=0.85):
-        """Generate n visually distinct colors from a base color by varying lightness."""
-        base = mcolors.to_rgb(base_color)
-        colors = []
-        h, l, s = colorsys.rgb_to_hls(*base)
-        for _i in range(n):
-            light = min_light + (max_light - min_light) * _i / max(1, n - 1)
-            rgb = colorsys.hls_to_rgb(h, light, s)
-            colors.append(rgb)
-        return colors
-
+def _(generate_palette, mps_table, np, plt):
     weights_split = mps_table['Weights estimation'].dropna().str.split('|', expand=True)
     weights_split.columns = ['Main', 'Sub']
     weights_split['Main'] = weights_split['Main'].str.strip()
@@ -248,9 +299,12 @@ def _(colorsys, mcolors, mps_table, np, output_directory, plt):
     stacked_counts = weights_split.groupby(['Main', 'Sub']).size().unstack(fill_value=0)
     sub_order = stacked_counts.sum(axis=0).sort_values(ascending=False).index
     stacked_counts = stacked_counts[sub_order]
-    main_base_colors = ['#ff6600', '#3ca55c', '#205493']
+    main_base_colors = ['#ffd2c3', # pink
+                        '#51ad7a', # green
+                        '#387adf'] # blue
+
     main_groups = stacked_counts.index.tolist()
-    colormaps = [plt.cm.Oranges_r, plt.cm.Greens_r, plt.cm.Blues_r]
+    # colormaps = [plt.cm.Oranges_r, plt.cm.Greens_r, plt.cm.Blues_r]
     _color_dict = {}
     all_subs = stacked_counts.columns.tolist()
     for _i, main in enumerate(main_groups):
@@ -258,7 +312,9 @@ def _(colorsys, mcolors, mps_table, np, output_directory, plt):
         palette = generate_palette(main_base_colors[_i], len(subs_for_main))
         for j, sub in enumerate(subs_for_main):
             _color_dict[main, sub] = palette[j]
-    _fig, (_ax, leg) = plt.subplots(2, 1, figsize=(15, 6), gridspec_kw={'height_ratios': [1, 1], 'hspace': 0.3})
+
+
+    f4b, (_ax, leg) = plt.subplots(2, 1, figsize=(15, 6), gridspec_kw={'height_ratios': [1, 1], 'hspace': 0.3})
     gap = 0.5
     bottom = np.zeros(len(main_groups))
     for _idx, sub in enumerate(all_subs):
@@ -291,11 +347,53 @@ def _(colorsys, mcolors, mps_table, np, output_directory, plt):
     leg.set_ylim(0, max_rows + 2)
     leg.invert_yaxis()
     leg.invert_xaxis()
-    leg.axis('off')
-    _fig.savefig(f'{output_directory}/Figure4B.png', dpi=300, bbox_inches='tight')
+    leg.axis('off');
+    return (f4b,)
 
-    _fig
 
+@app.cell
+def _(
+    f4a_leg,
+    f4a_main,
+    f4b,
+    output_directory,
+    output_format,
+    output_resolution,
+    plt,
+    savefigs,
+):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+    # Create a new figure with a grid of 1 row and 2 columns
+    # f4, ([a, a_leg], [b, b]) = plt.subplots(2, 2, figsize=(12, 6))
+
+    f4, faxs = plt.subplot_mosaic([['A', 'A_legend'],['B','B']], 
+                                  width_ratios=[1,.3], height_ratios=[1,.5], gridspec_kw=dict(wspace=-0.1, hspace=-0.32),
+                                  figsize = (20, 20))
+
+    # Copy the content of fig1 into ax_combined1
+    A = FigureCanvas(f4a_main)
+    A.draw()
+    faxs['A'].imshow(A.buffer_rgba())
+
+    A_leg = FigureCanvas(f4a_leg)
+    A_leg.draw()
+    faxs['A_legend'].imshow(A_leg.buffer_rgba())
+
+    B = FigureCanvas(f4b)
+    B.draw()
+    faxs['B'].imshow(B.buffer_rgba())
+
+    for _ax in faxs.values():
+        _ax.axis('off')
+
+    f4.text(0.13, 0.71, 'A.', fontsize=30, fontweight='bold')
+    f4.text(0.13, 0.39, 'B.', fontsize=30, fontweight='bold')
+
+    if (savefigs.value): 
+        f4.savefig(f'{output_directory}Figure4_methods.{output_format}', dpi=output_resolution, bbox_inches='tight')
+
+    f4
     return
 
 
@@ -369,13 +467,28 @@ def _():
 
 
 @app.cell
+def _(colorsys, mcolors):
+    def generate_palette(base_color, n, min_light=0.35, max_light=0.85):
+        """Generate n visually distinct colors from a base color by varying lightness."""
+        base = mcolors.to_rgb(base_color)
+        colors = []
+        h, l, s = colorsys.rgb_to_hls(*base)
+        for _i in range(n):
+            light = min_light + (max_light - min_light) * _i / max(1, n - 1)
+            rgb = colorsys.hls_to_rgb(h, light, s)
+            colors.append(rgb)
+        return colors
+    return (generate_palette,)
+
+
+@app.cell
 def _(color_maps, mps_base_matched, np, pd):
     # ================== SANKY DIAGRAMS ==================
     def sankey(ax, var, left_labels, right_labels, data=mps_base_matched, 
                left = ' [development]', right = ' [application]',
                title_left='Development\ndataset', title_right='Application\ndataset', 
                spacer=10, fss={'sm': 14, 'l': 15, 'xxl': 25}):
-    
+
         counts = pd.DataFrame(data[[f'{var}{left}',
                                     f'{var}{right}']].value_counts(dropna=False)).reset_index()
 
@@ -383,7 +496,7 @@ def _(color_maps, mps_base_matched, np, pd):
         def check_labels(label_dict, side):
             labels_found = set(counts[f'{var}{side}'])
             labels_requested = set(label_dict.keys())
-        
+
             # Elements found but not requested
             others = list(set(labels_found) - set(labels_requested))
             if len(others) > 0:
@@ -392,44 +505,44 @@ def _(color_maps, mps_base_matched, np, pd):
 
                 counts[f'{var}{side}'] = counts[f'{var}{side}'].replace({l: "Other" for l in others})
                 label_dict['Other'] = {'color': 'grey'}
-        
+
             missing = list(set(labels_requested) - set(labels_found))
             if len(missing) > 0:
                 print(f'{var}{side}: {len(missing)} labels specified in label dictionary'
                       f'were not found in data: {missing}')
-            
+
                 label_dict = {k: v for k, v in label_dict.items() if k not in missing}
 
             return counts, label_dict
-    
+
         counts, left_labels = check_labels(left_labels, side=left)
         counts, right_labels = check_labels(right_labels, side=right)
 
         total = counts['count'].sum()
 
         def size_esimator(label_dict, side):
-    
+
             size_list = list()
-        
+
             for label in label_dict.keys():
                 label_count = int(counts.loc[counts[f'{var}{side}']==label, 'count'].sum())
                 label_dict[label]['size'] = label_count
                 size_list.append(label_count)
-    
+
             cumulative_sum = np.cumsum(size_list).tolist()
-        
+
             top_pos = [0] + [c+(spacer*(i+1))for i,c in enumerate(cumulative_sum[:-1])]
             bottom_pos = [c+(spacer*(i))for i,c in enumerate(cumulative_sum)]
-    
+
             for i, label in enumerate(label_dict.keys()):
                 label_dict[label]['top'] = top_pos[i]
                 label_dict[label]['bottom'] = bottom_pos[i]
-        
+
             return label_dict
-    
+
         left_dict = size_esimator(left_labels, side=left)
         right_dict = size_esimator(right_labels, side=right)
-    
+
         def label_y(label_dict, label):
             if label_dict[label]['size'] > spacer:
                 y = label_dict[label]['top']+1
@@ -441,21 +554,21 @@ def _(color_maps, mps_base_matched, np, pd):
             string_spacer = '\n' if label_dict[label]['size'] > 5 else ' '
             percent_count = round(label_dict[label]['size'] / total * 100)
             percent_count = percent_count if percent_count > 0 else '<1'
-        
+
             # TMP case specific string handling 
             if label == 'Multiple (450K, GMEL (~3000 CpGs from EPICv1))':
                 label = 'Multiple (450K, GMEL*)'
 
             s = f"{label}{string_spacer}({percent_count}%)"
-        
+
             return dict(y=y, s=s, va=va)
-    
+
         # Draw left counts
         for label in left_dict.keys():
             ax.fill_between(x=[0, 1], y1=left_dict[label]['top'], y2=left_dict[label]['bottom'], 
                             color=left_dict[label]['color'], edgecolor=None)
             ax.text(x=-0.1, **label_y(left_dict, label), ha='right', fontsize=fss['sm'])
-    
+
         # Draw right counts
         for label in right_dict.keys():
             ax.fill_between(x=[9, 10], y1=right_dict[label]['top'], y2=right_dict[label]['bottom'], 
@@ -470,29 +583,29 @@ def _(color_maps, mps_base_matched, np, pd):
         # Draw strips 
         for left_label in left_dict.keys():
             for right_label in right_dict.keys():
-            
+
                 strip_color = left_dict[left_label]['color'] # Color strip according to the left side
-            
+
                 strip_size = counts.loc[(counts[f'{var}{left}']==left_label) & (counts[f'{var}{right}']==right_label), 'count']
-    
+
                 if  len(strip_size) > 0:
                     strip_size = int(strip_size.iloc[0])
-    
+
                     # Create array of y values for each strip, half at left value, half at right, convolve
                     ys_d = np.array(50 * [left_dict[left_label]['top']] + 50 * [right_dict[right_label]['top']])
                     ys_d = np.convolve(ys_d, 0.05 * np.ones(20), mode='valid')
                     ys_d = np.convolve(ys_d, 0.05 * np.ones(20), mode='valid')
-                
+
                     ys_u = np.array(50 * [left_dict[left_label]['top'] + strip_size] + 50 * [right_dict[right_label]['top'] + strip_size])
                     ys_u = np.convolve(ys_u, 0.05 * np.ones(20), mode='valid')
                     ys_u = np.convolve(ys_u, 0.05 * np.ones(20), mode='valid')
-    
+
                     # Update bottom edges at each label so next strip starts at the right place
                     left_dict[left_label]['top'] += strip_size
                     right_dict[right_label]['top'] += strip_size
-                
+
                     ax.fill_between(np.linspace(1, 9, len(ys_d)), ys_d, ys_u, alpha=0.4, color=strip_color, edgecolor=None)
-    
+
         largest_count = max(left_dict[list(left_dict.keys())[-1]]['bottom'], right_dict[list(right_dict.keys())[-1]]['bottom'])
         ax.set_xlim(-0.1, 10.1)
         ax.set_ylim(-10, largest_count+10)
@@ -501,12 +614,12 @@ def _(color_maps, mps_base_matched, np, pd):
 
         # Add superior title
         ax.set_title(' '.join(var.split('_')), fontweight='bold', fontsize=fss['xxl'], pad=30)
-    
+
         # Also return overall overlap
         color_counts = counts.copy()
         color_counts[f'{var}{left}'] = [left_labels[i]['color'] for i in counts[f'{var}{left}']]
         color_counts[f'{var}{right}'] = [right_labels[i]['color'] for i in counts[f'{var}{right}']]
-    
+
         match = int(color_counts.loc[(color_counts[f'{var}{left}'] == color_counts[f'{var}{right}']) & (color_counts[f'{var}{left}'] != 'grey'), 
                     'count'].sum())
         match_percent = match / total * 100
@@ -515,7 +628,7 @@ def _(color_maps, mps_base_matched, np, pd):
 
 
     def display_match(ax, match, fss, note=None):
-            
+
         ax.text(x=.4, y=.80, s='Match:',fontsize=fss['l'], 
                 ha='center', va='center', transform=ax.transAxes)
         ax.text(x=.6, y=.80, s=f'{round(match)}%',fontsize=fss['xl'], fontweight='bold',
@@ -536,7 +649,7 @@ def _(color_maps, mps_base_matched, np, pd):
 
         # fig, axs = plt.subplot_mosaic('A;a', figsize=(fig_width, fig_height),
         #                               height_ratios=[1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
-    
+
         main_plot = sankey(axs[0], var=var, right_labels = right_labels, left_labels = left_labels, 
                            data=mps_base_matched, fss=fss)
 
