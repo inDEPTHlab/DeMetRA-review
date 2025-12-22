@@ -62,8 +62,8 @@ def overview_page(page_id='overview_page'):
                         ui.layout_columns(
                             ui.markdown(
                                 "Welcome!<br> Here you can explore the data related to our literature review: "\
-                                "***Development and application of methylation profile scores in pediatric research: "\
-                                "A systematic review and primer*** [DOI](todo).<br>" \
+                                "***Methylation profile scores in early life: a systematic review and developmental risk atlas*** "\
+                                "[Pre-print](http://dx.doi.org/10.2139/ssrn.5852502).<br>" \
                                 "On this page, you can search and filter the literature table.<br>"),
                             add_value_box('paper_count', 'publications', 'file-circle-check'),
                             add_value_box('mpss_count', 'unique MPSs', 'dna'),
