@@ -4,6 +4,7 @@ import faicons as fa
 from shinywidgets import output_widget
 
 from definitions.backend_funcs import mps_table
+from definitions.submission_module import mps_block_ui
 import definitions.layout_styles as style
 
 
@@ -160,5 +161,46 @@ def target_base_comparison_page():
 def sample_size_page():
     return ui.nav_panel("Sample size over time",
                         ui.markdown("Here you take a look at sample sizes over publication date.<br>"),
-                        output_widget('sample_size_over_time')),
+                        output_widget('sample_size_over_time'))
 
+def submit_page(page_id="submit_page"):
+    return ui.nav_panel(
+        "Submit your MPS to DeMetRA!",
+        ui.markdown(
+            "Fill in as many information as you can about the MPS(s) you have developed or "
+            "applied to in a developmental context, then hit the **Submit for review** button. We will "
+            "process your submission as soon as possible and get back to you.<br>"
+            "Note: something is wrong or missing? Please open an [issue](https://github.com/inDEPTHlab/DeMetRA-review/issues) to let us know!"
+        ),
+        # ── Publication-level (filled once) ─────────────────────────────
+        ui.card(
+            ui.card_header("🗞️ Publication or pre-print info"),
+            ui.input_text(f"{page_id}_title", ui.h6("Title", style="font-weight:bold"),
+                          placeholder="Full paper title", width="100%"),
+            ui.input_text(f"{page_id}_author", ui.h6("Author(s)", style="font-weight:bold"),
+                              placeholder="e.g. Smith et al.", width="100%"),
+            
+            ui.layout_columns(
+                ui.input_text(f"{page_id}_doi", ui.h6("DOI", style="font-weight:bold"),
+                              placeholder="e.g. 10.1000/xyz123", width="100%"),
+                ui.input_text(f"{page_id}_journal", ui.h6("Journal", style="font-weight:bold"),
+                              placeholder="e.g. medRxiv, Journal of Epigenetics", width="100%"),
+                ui.input_date(f"{page_id}_year", ui.h6("Publication date", style="font-weight:bold"),
+                                 value=None, # Defaults to today
+                                 min="2000-01-01", max=None),
+                col_widths=[5, 4, 3]),
+        ),
+        # ── First MPS block is static, then depend on + add MPS ───
+        ui.div(
+            mps_block_ui("mps_1", 1), id=f"{page_id}_mps_container"
+        ),
+        
+        # ── Buttons ───────────────────────────────────────────────
+        ui.input_action_button(f"{page_id}_add_mps", "➕ add MPS", class_="btn-demetra"),
+
+        ui.div(
+            ui.input_action_button(f"{page_id}_submit",  "📨 Submit for review", class_="btn-submit"), 
+            style="display: flex; justify-content: flex-end; margin-top: 10px;",
+        ),
+        ui.output_ui(f"{page_id}_result")
+    )

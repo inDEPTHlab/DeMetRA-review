@@ -5,6 +5,7 @@
     --demetra-purple: #4b61ef;
     --demetra-darkblue: #001078;
     --demetra-lightpink: #f9ebff;
+    --demetra-darkpink: #d3a1e9ff;
 
     --Category-Biological_markers: #113ab7;
     --Category-Genetic_syndromes: #008080;
@@ -93,4 +94,66 @@ body {
     display: flex; /* Ensure content alignment */
     justify-content: center; /* Center the content horizontally */
     align-items: center; /* Center the content vertically */
+}
+
+/* ── DeMetRA button ─────────────────────────────────────── */
+.btn-demetra {
+    background-color: var(--demetra-lightpink);
+    color: #000000; /* text color */
+    border: none;
+    border-radius: 999px;  /* fully rounded */
+    padding: 6px 18px;
+    font-weight: 500;
+    outline: none;
+    box-shadow: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-demetra:hover {
+    background-color: var(--demetra-darkpink);   /* darker shade on hover */
+    color: #000000; 
+}
+
+.btn-submit {
+    background-color: var(--demetra-purple);
+    color: #000000; /* text color */
+    border: none;
+    border-radius: 5px;  /* fully rounded */
+    padding: 6px 18px;
+    font-weight: 500;
+    outline: none;
+    box-shadow: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-submit:hover {
+    background-color: var(--demetra-darkblue);   /* darker shade on hover */
+    color: #ffffffff; 
+}
+
+
+/* ── Submission result panels ───────────────────────────── */
+.submit-result-success,
+.submit-result-error {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.95em;
+}
+
+.submit-result-success {
+    background-color: #eaf7ed;
+    border-left: 4px solid #2e7d4f;
+    color: #1e4d32;
+}
+
+.submit-result-error {
+    background-color: #fff3f3;
+    border-left: 4px solid var(--bs-danger);
+    color: #7a1f1f;
+}
+
+.submit-result-error ul {
+    margin: 8px 0 0 0;
+    padding-left: 18px;
 }
