@@ -1,12 +1,11 @@
 import marimo as mo
 import pandas as pd
-import openpyxl
 
 from dateutil.parser import parse as parse_date
 
 def read_sys_review(assets_directory, sys_review_file):
     '''Read in the systematic review data from the excel file.'''
-    lit_raw, base_ss, base_va = pd.read_excel(f'{assets_directory}/Annotations_raw_files/{sys_review_file}',
+    lit_raw, base_ss, base_va = pd.read_excel(f'{assets_directory}/raw_files/annotations/{sys_review_file}',
         sheet_name=[0, 1, 2]).values()
 
     lit_raw = lit_raw.loc[lit_raw.Include == 'Yes'].drop('Include', axis=1) # All included
@@ -214,7 +213,7 @@ def parse_ris(file_path):
 def read_bibliography(assets_directory, bibliograp_file, title_list):
     '''Read in and clean the bibliography data from the RIS file.'''
 
-    parsed_data = parse_ris(f"{assets_directory}/Bibliography_raw_files/{bibliograp_file}")
+    parsed_data = parse_ris(f"{assets_directory}/raw_files/bibliography/{bibliograp_file}")
 
     bib = pd.DataFrame(parsed_data)[['Author_list', 'Year', 'Title', 'Journal', 'Keywords', 
                                      'Abstract', 'Date', 'DOI']] # 'URL' are not reliable, I will use DOI 

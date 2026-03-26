@@ -1,234 +1,113 @@
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import pickle
-
-from shiny import ui
 
 import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import ast 
-import re
 import textwrap
 
 import definitions.layout_styles as styles
-
-from pathlib import Path
-
 
 main_dir = Path(__file__).parent.parent
 
 assets_directory = main_dir / 'assets'
 
-# ================== DATA LOADING =================
-mps_table = pd.read_csv(f'{assets_directory}/MPS_table_cleaned.csv', parse_dates=['Date'])
-pub_table = pd.read_csv(f'{assets_directory}/Publication_table_cleaned.csv', parse_dates=['Date'])
+# Review data 
 
+base_targ_data = pd.read_csv(f'{assets_directory}/review_2025/MPS_base_matched_cleaned.csv')
 
-# Turn DOI into a clickable link
-mps_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI  </a>') for doi in mps_table['DOI']]
-pub_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI  </a>') for doi in pub_table['DOI']]
+fig_margins = dict(l=0, r=0, t=25, b=0)  # t=25 keeps just enough for the toolbar
 
-# Display lists inside cells as bulletpoints
-def list_to_html(cell):
-    ul_element = '<ul style="margin-left:0; padding-left:0;">'
-    if isinstance(cell, str): # lists are turned into strings by the csv reader
-        # print(cell)
-        try:
-            value = ast.literal_eval(cell)
-            # print(value)
-            if isinstance(value, list):
-                # print(value)
-                return ui.HTML(ul_element + ''.join([f'<li>{item}</li>' for item in value]) + '</ul>')
-            else: #if isinstance(value, float):
-                return str(int(value)) if not np.isnan(value) else ''
-            
-        except (ValueError, SyntaxError):
-            # Fallback: parse np.float64-style strings
-            matches = re.findall(r'np\.float64\((nan|[\d\.]+)\)', cell)
-            items = []
-            for m in matches:
-                if not m == 'nan':
-                    f = float(m)
-                    # items.append(str(int(f)) if f.is_integer() else str(f))
-                    # Instead of a bulletpoint list I show range
-                    items.append(int(f))
-            
-            if items:
-                # return ui.HTML(ul_element + ''.join([f'<li>{item}</li>' for item in items]) + '</ul>')
-                if len(items) == 2:
-                    return f'{items[0]}, {items[1]}'
-                else: 
-                    return f'{min(items)}-{max(items)}'
-
-    elif isinstance(cell, list):
-        # print(cell)
-        items = [str(int(x)) if isinstance(x, float) and x.is_integer() else str(x) for x in cell]
-        return ui.HTML(ul_element + ''.join([f"<li>{item}</li>" for item in items]) + '</ul>')
-    
-    elif isinstance(cell, float) or isinstance(cell, int):
-        return str(int(cell)) if not np.isnan(cell) else ''
-    
-    else: 
-        print(cell)
-
-    return cell
-
-mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs',
-                            'Author', 'Year', 'Title', ' ', 'Based on',
-                            'Sample type', 'Sample size', 'n Cases', 'n Controls', 
-                            'Developmental period', 'Tissue', 'Array', 'Ancestry']
-                            # ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
-                            # [f'Dimension reduction ({i})' for i in range(1, 6)] +
-                            # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
-                            #  'Comparison', 'Missing_value_note', 'Covariates']
-                            ]
-
-                                
-pub_table_show = pub_table[['Author', 'Year', 'Title', 'Journal',' ','n MPSs', 'Phenotype(s)', 'Category', 
-                            'n CpGs', 'Based on', 'Sample type', 'Sample size', 'n Cases', 'n Controls',
-                            'Developmental period', 'Tissue', 'Array', 'Ancestry']
-                            # ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
-                            # [f'Dimension reduction ({i})' for i in range(1, 6)] +
-                            # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
-                            #  'Comparison', 'Missing_value_note', 'Covariates']
-                            ]
-
-base_targ_data = pd.read_csv(f'{assets_directory}/MPS_base_matched_cleaned.csv')
-
-# ==========================================
-
-
-def _count_papers():
-    return pub_table.shape[0]
-
-
-def _count_mpss():
-    return mps_table.shape[0]
-
-
-def _count_phenotypes(df = mps_table):
-    n = int(len(pd.unique(df['Phenotype'])))
-    return n
-
-# =============== FILTERING & STYLING TABLES ================
-
-def _filter_litreview_table(selected_category, selected_phenotype, selected_period,
-                            selected_year_range, based_on_filter, which_table):
-    
-    if which_table == 'mps_table':
-        table = mps_table_show.copy()
-    else:
-        table = pub_table_show.copy()
-
-    if len(selected_category) > 0:
-        table = table.loc[table['Category'].str.contains('|'.join(list(selected_category)), na=False, regex=True), ]
-
-    if len(selected_phenotype) > 0:
-        v_name = 'Phenotype' if which_table == 'mps_table' else 'Phenotype(s)'
-        table = table.loc[table[v_name].str.contains('|'.join(list(selected_phenotype)), na=False, regex=True), ]
-
-    if len(selected_period) > 0:
-        table = table.loc[table['Developmental period'].str.contains('|'.join(list(selected_period)), na=False, regex=True), ]
-
-    if (selected_year_range[0] > table['Year'].min()) or (selected_year_range[1] < table['Year'].max()):
-        table = table.loc[(table['Year'] >= selected_year_range[0]) & (table['Year'] <= selected_year_range[1]), ]
-
-    if len(based_on_filter) < 3: 
-        table = table.loc[table['Based on'].str.contains('|'.join(list(based_on_filter)), na=False, regex=True), ]
-    
-    # Sort by phenotype 
-    if which_table == 'mps_table':
-        table = table.sort_values(by='Phenotype')
-    else:
-        table = table.sort_values(by=['Author', 'Year'])
-        # Do some extra styling for collapsed values
-        for var_to_restyle in ['Phenotype(s)', 'Category', 'Based on', 
-                               'Developmental period', 'Tissue', 'Array', 'Ancestry',
-                               'n CpGs', 'Sample size','n Cases', 'n Controls']:
-            table[var_to_restyle] = table[var_to_restyle].apply(list_to_html)
-
-    table_style = _style_litreview_table(table.reset_index(), which_table = which_table)
-
-    return table, table_style
-
-
-def _style_litreview_table(table, which_table):
-    
-    table_style = [
-        {'cols': ['Category', 'Author', 'Based on'],
-        'style': {'width': '130px', 'max-width': '150px', 'min-width': '110px'}},
-        {'cols': ['Title'],
-        'style': {'width': '600px', 'max-width': '700px', 'min-width': '500px'}},
-        {'cols': ['Sample size', 'n Cases', 'n Controls'],
-        'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px', 'text-align': 'right'}},
-        {'cols': [' '],
-        'style': {'width': '30px', 'max-width': '30px', 'min-width': '30px', 'text-align': 'center'}},
-        ]
-    
-    if which_table == 'pub_table':
-        table_style.extend([
-            {'cols': ['Phenotype(s)'],
-             'style': {'width': '200px', 'max-width': '500px', 'min-width': '200px'}},
-            {'cols': ['n MPSs'],
-             'style': {'text-align': 'center'}}
-             ])
-    else:
-        table_style.extend([
-            {'cols': ['Phenotype', 'Category'],
-             'style': {'width': '200px', 'max-width': '300px', 'min-width': '180px'}},
-             ])
-    
-    for cat in table['Category'].unique():
-        fetch_color = f'var(--light-Category-{cat.replace(" ", "_")})'
-
-        row_color = {'rows': table.index[table['Category'] == cat].tolist(),
-                     'style': {'background-color': fetch_color}}
-        table_style.append(row_color)
-    
-    
-    return table_style
-
-# ================ PLOTTING ================
-
-
-def _multilevel_piechart(lvl1='Category', lvl2='Phenotype', color_by="Category",
-                         fig_width=1300, fig_height=800, data=mps_table):
-    """
-        Multilevel pie chart of Category | Phenotypes
-    """
+def _multilevel_piechart(data, lvl1='Category', lvl2='Phenotype', color_by="Category",
+                         fig_width=800, fig_height=800):
 
     counts = data[[lvl1, lvl2]].value_counts().reset_index()
+    counts = counts.merge(data.groupby(lvl2)['Title'].nunique().reset_index(), on=lvl2)
 
-    # Count publications
-    unique_papers = data.groupby(lvl2)['Title'].nunique().reset_index()
-    counts = counts.merge(unique_papers, on=lvl2, how='left')
+    color_map = styles.COLOR_MAPS.get(color_by, {})
 
-    counts['hover_label'] = counts.apply(
-        lambda row: f"<b>{row[lvl2]}</b>"\
-                    f"<br>Unique MPSs: {row['count']}"\
-                    f"<br>Unique publications: {row['Title']}"\
-                    f"<br>Category: {row[lvl1]}", axis=1
-    )
+    cat_totals = counts.groupby(lvl1)['count'].sum().reset_index()
 
-    # Color set-up
-    if color_by in styles.COLOR_MAPS.keys():
-        color_map = styles.COLOR_MAPS[color_by]
-    else:
-        color_map = "Virdis"
-    
-    fig = px.sunburst(counts,
-                      path=[lvl1, lvl2], values='count',
-                      hover_data={'hover_label': True},
-                      color = lvl1, color_discrete_map = color_map,
-                      width=fig_width, height=fig_height,
-                      title='')
+    parents = pd.DataFrame({
+        'id':     cat_totals[lvl1],
+        'label':  cat_totals[lvl1],
+        'parent': '',
+        'value':  cat_totals['count'],
+        'color':  cat_totals[lvl1].map(color_map),
+        'hover':  cat_totals.apply(lambda r:
+            f"<b>{r[lvl1]}</b><br>Unique MPSs: {r['count']}<br>"
+            f"<i>Click to zoom into {r[lvl1]}</i>", axis=1),
+    })
 
-    fig.update_traces(hovertemplate='%{customdata[0]}')
+    leaves = pd.DataFrame({
+        'id':     counts[lvl1] + '/' + counts[lvl2],
+        'label':  counts[lvl2],
+        'parent': counts[lvl1],
+        'value':  counts['count'],
+        'color':  counts[lvl1].map(color_map),
+        'hover':  counts.apply(lambda r:
+            f"<b>{r[lvl2]}</b><br>Unique MPSs: {r['count']}<br>"
+            f"Unique publications: {r['Title']}<br>Category: {r[lvl1]}", axis=1),
+    })
 
+    nodes = pd.concat([parents, leaves], ignore_index=True)
+
+    fig = go.Figure(go.Sunburst(
+        ids=nodes['id'], labels=nodes['label'], parents=nodes['parent'],
+        values=nodes['value'], branchvalues='total',
+        marker=dict(colors=nodes['color']),
+        customdata=nodes['hover'],
+        hovertemplate='%{customdata}<extra></extra>',
+    ))
+
+    fig.update_layout(width=fig_width, height=fig_height, margin=fig_margins)
     return fig
 
-def _mps_count_histogram(fig_width=1700, fig_height=390, data=mps_table):
+def _phenotype_pub_counts(data, min_publications=3, fig_width=300, fig_height=800):
+    """
+    Horizontal bar chart of publication count per phenotype, colored by category.
+    Only phenotypes in at least `min_publications` publications are shown.
+    """
+    color_map = styles.COLOR_MAPS.get('Category', {})
+
+    agg = (
+        data.groupby('Phenotype')
+        .agg(publications=('Title', 'nunique'), mps_count=('Phenotype', 'count'), category=('Category', 'first'))
+        .reset_index()
+        .query('publications >= @min_publications')
+        .sort_values('publications', ascending = True)
+    )
+
+    fig = px.bar(
+        agg, x='publications', y='Phenotype', orientation='h',
+        color='category', color_discrete_map=color_map,
+        custom_data=['category', 'mps_count'],
+    )
+
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Category: %{customdata[0]}<br>"
+            "Publications: %{x}<br>"
+            "Unique MPSs: %{customdata[1]}"
+            "<extra></extra>"
+        )
+    )
+
+    axes_style = dict(mirror=True, ticks='outside', showline=True, linecolor='black', gridcolor='lightgrey')
+    fig.update_xaxes(title_text='<b>Number of publications</b>', **axes_style)
+    fig.update_yaxes(title_text='', showticklabels=False, **axes_style, 
+                     categoryorder='total ascending')
+    fig.update_layout(width=fig_width, height=fig_height, margin=fig_margins, 
+                      showlegend=False, plot_bgcolor='whitesmoke')
+    return fig
+
+
+def _mps_count_histogram(data, fig_width=1700, fig_height=390):
 
     # Group by publication to extract publication category
     pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
@@ -261,13 +140,14 @@ def _mps_count_histogram(fig_width=1700, fig_height=390, data=mps_table):
         height=fig_height,
         xaxis_title='<b>Publication</b>',
         yaxis_title='<b>MPS count</b>',
-        showlegend=False
+        showlegend=False,
+        margin=fig_margins
     )
 
     return fig
 
 
-def _category_over_years(data=mps_table, color_by='Category', 
+def _category_over_years(data, color_by='Category', 
                          fig_width=1300, fig_height=450,
                          percent=True):
     """
@@ -288,81 +168,87 @@ def _category_over_years(data=mps_table, color_by='Category',
 
     return fig
 
-def _publication_histogram(min_count=1, fig_width=1700, fig_height=350, data=mps_table):
+def _publication_histogram(data: pd.DataFrame, min_count: int = 1,
+                           fig_width: int = 1700, fig_height: int = 350):
+    """
+    Parameters
+    ----------
+    data : one row per publication, must have columns:
+          'Title', 'Author_list', 'Category'
+    """
 
-    # Group by publication to extract publication category
-    pub_category = data.groupby("Title")['Category'].apply(list).reset_index()
-    pub_category['Publication category'] = [p[0] if len(set(p)) == 1 else 'Mixed' for p in pub_category['Category']]
-    
-    # Match with authors
-    pub_authors = data.groupby("Title")['Author_list'].first().reset_index()
-    pubs = pd.merge(pub_category.drop('Category', axis=1), pub_authors, on='Title')
+    # ── Resolve publication category ──────────────────────────────
+    # Category can vary across MPS rows for same publication — keep first
+    # (data should already be deduplicated, but guard anyway)
+    pubs = data.drop_duplicates(subset="Title").copy()
+    pubs["Publication category"] = pubs["Category"].apply(
+        lambda c: c if pd.notna(c) and c else "Unknown"
+    )
 
-    # Explode so that each author-publication pair is a row
-    #  - first, esure all authors are in a list 
-    def auth_to_list(x):
+    # ── Parse Author_list ─────────────────────────────────────────
+    def _to_list(x) -> list:
+        if isinstance(x, list):
+            return x
         try:
             return ast.literal_eval(x)
         except Exception:
-            return list(x) if isinstance(x, (list, tuple, set)) else [x]
+            return [x] if isinstance(x, str) else list(x)
 
-    pubs['Author_list'] = pubs['Author_list'].apply(auth_to_list) 
-    pubs_by_author = pubs.explode('Author_list').reset_index(drop=True)
+    pubs = pubs.copy()
+    pubs["Author_list"] = pubs["Author_list"].apply(_to_list)
 
-    # Prettyfy 
-    pubs_by_author.rename(columns={'Author_list': 'Author'}, inplace=True)
-    pubs_by_author = pubs_by_author[['Author', 'Title','Publication category']].sort_values(by='Author')
+    # ── Explode to one row per author-publication pair ────────────
+    pubs_by_author = (
+        pubs[["Author_list", "Title", "Publication category"]]
+        .explode("Author_list")
+        .rename(columns={"Author_list": "Author"})
+        .sort_values("Author")
+        .reset_index(drop=True)
+    )
 
-    # Filter authors that appear more than `min_count`
-    author_counts = pubs_by_author['Author'].value_counts()
+    # ── Filter to authors with more than min_count publications ───
+    author_counts    = pubs_by_author["Author"].value_counts()
     prolific_authors = author_counts[author_counts > min_count].index
-    filtered_pubs_by_author = pubs_by_author[pubs_by_author['Author'].isin(prolific_authors)].reset_index(drop=True)
+    filtered         = pubs_by_author[pubs_by_author["Author"].isin(prolific_authors)].reset_index(drop=True)
 
-    # Sort authors by total publication count
+    # ── Sort by total publication count ───────────────────────────
     author_order = (
-        filtered_pubs_by_author.groupby('Author')
+        filtered.groupby("Author")
         .size()
         .sort_values(ascending=False)
         .index.tolist()
     )
 
-    # Plot histogram 
-    color_map = styles.COLOR_MAPS['Category']
-    color_map['Mixed'] = 'grey'
+    # ── Plot ──────────────────────────────────────────────────────
+    color_map = {**styles.COLOR_MAPS["Category"], "Mixed": "grey", "Unknown": "lightgrey"}
 
-    # Create the histogram
     fig = px.histogram(
-        filtered_pubs_by_author,
-        x='Author',
-        y=None,  # Automatically counts occurrences
-        category_orders={'Author': author_order},
-        color='Publication category',
+        filtered,
+        x="Author",
+        color="Publication category",
+        category_orders={"Author": author_order},
         color_discrete_map=color_map,
-        # hover_data={'Titles': True, 'Author': False},  # Show titles in hover, hide redundant author info
-        title='',
-        
+        title="",
     )
 
     fig.update_layout(
         width=fig_width,
         height=fig_height,
-        xaxis_title='<b>Author</b>',
-        yaxis_title='<b>Number of publications</b>',
-        showlegend=False
+        xaxis_title="<b>Author</b>",
+        yaxis_title="<b>Number of publications</b>",
+        showlegend=False,
+        margin=fig_margins
     )
-    # Rotate x-tick labels 65 degrees and reduce font-size ensure all labels are shown
-    fig.update_xaxes(tickangle=65, tickmode='linear', tickfont=dict(size=8))
-
-    # Update hover template
-    fig.update_traces(hovertemplate='Author: <b>%{x}</b><br>Publication count: %{y}')
+    fig.update_xaxes(tickangle=65, tickmode="linear", tickfont=dict(size=8))
+    fig.update_traces(hovertemplate="Author: <b>%{x}</b><br>Publication count: %{y}")
 
     return fig
 
-    
-def _publication_network(fig_width=1300, fig_height=900, data=mps_table):
+
+def _publication_network(data, nx_file, fig_width=1300, fig_height=900):
 
     # Read the graph object from file
-    with open(f'{assets_directory}/Publications_network.pkl', 'rb') as file:
+    with open(nx_file, 'rb') as file:
         G = pickle.load(file)
 
     # Wrap text for hover info
@@ -441,8 +327,43 @@ def _publication_network(fig_width=1300, fig_height=900, data=mps_table):
 
     return fig
 
-# ================== SANKY DIAGRAMS ==================
-def sankey(ax, var, left_labels, right_labels, data=base_targ_data, 
+
+def _sample_size_over_time(data, color_by='Category', 
+                           log_sample_size=True, model_type="ols", scope="overall"):
+    """
+    Scatterplot of sample size (y axis) vs. publication date (x axis)
+    """
+    # Color set-up
+    if color_by in styles.COLOR_MAPS.keys():
+        color_map = styles.COLOR_MAPS[color_by]
+    else:
+        color_map = 'Virdis'
+
+    line_color = 'grey' if scope == 'overall' else None
+    model_options = dict(log_y=log_sample_size) if model_type == "ols" else dict(frac=1)
+
+    # Plot
+    fig = px.scatter(data, x='Date', y='Sample size', log_y=log_sample_size,
+                     color=color_by, color_discrete_map=color_map,
+                     hover_name=data.Title.apply(lambda t: "<br>".join(textwrap.wrap(t, width=80))),
+                     hover_data='Phenotype',
+                     trendline=model_type, trendline_scope=scope, trendline_color_override=line_color,
+                     trendline_options=model_options,
+                     title='')
+    # Make it pretty
+    fig.update_traces(marker=dict(size=10, opacity=.5))
+    axes_style = dict(mirror=True, ticks='outside', showline=True, linecolor='black', gridcolor='lightgrey')
+    ylabel_note = ' (log scale)' if log_sample_size else ''
+    fig.update_yaxes(title_text=f'<b>Sample size</b>{ylabel_note}', **axes_style)
+    fig.update_xaxes(title_text='Publication date', **axes_style)
+    fig.update_layout(plot_bgcolor='whitesmoke', width=1300, height=400, margin=fig_margins)
+
+    return fig
+        
+
+# ===== SANKY DIAGRAMS =====================================================
+
+def sankey(ax, var, left_labels, right_labels, data, 
            left = ' [development]', right = ' [application]',
            title_left='Development\ndataset', title_right='Application\ndataset', 
            spacer=10, fss={'sm': 14, 'l': 15, 'xl': 25}):
@@ -597,22 +518,26 @@ def display_match(ax, match, fs=22, note=None):
     ax.axis('off')
 
 
-def _single_sankey(var, right_label_order, left_label_order, note=None,
+def _single_sankey(var, right_label_order, left_label_order, df = base_targ_data, note=None,
                    filter = None, color_maps = styles.COLOR_MAPS, 
                    fig_width=8, fig_height=10):
     '''Draw a single sankey diagram for a given variable'''
 
     if filter != "All application studies":
-        data = base_targ_data.loc[base_targ_data['Based on'] == filter, ]
+        data = df.loc[df['Based on'] == filter, ]
     else:
-        data = base_targ_data
+        data = df
 
     fss={'sm': 8, 'l': 11, 'xl': 21}
 
     color_dict = color_maps[var]
 
-    right_labels = {label: {'color': color_dict[label]} for label in right_label_order}
-    left_labels = {label: {'color': color_dict[label]} for label in left_label_order}
+    # ── Fall back to full color map if no order specified ─────────
+    right_order = right_label_order if right_label_order else list(color_dict.keys())
+    left_order  = left_label_order  if left_label_order  else list(color_dict.keys())
+
+    right_labels = {label: {'color': color_dict[label]} for label in right_order if label in color_dict}
+    left_labels  = {label: {'color': color_dict[label]} for label in left_order  if label in color_dict}
 
     fig, axs = plt.subplot_mosaic('A;a', figsize=(fig_width, fig_height),
                                   height_ratios=[1,.27], gridspec_kw=dict(hspace=0, wspace=1.2))
@@ -626,37 +551,4 @@ def _single_sankey(var, right_label_order, left_label_order, note=None,
     fig.subplots_adjust(left=0.25, right=0.75, bottom=0.1, top=0.9)
 
     return fig
-
-def _sample_size_over_time(data=mps_table, color_by='Category', 
-                           log_sample_size=True, model_type="ols", scope="overall"):
-    """
-    Scatterplot of sample size (y axis) vs. publication date (x axis)
-    """
-    # Color set-up
-    if color_by in styles.COLOR_MAPS.keys():
-        color_map = styles.COLOR_MAPS[color_by]
-    else:
-        color_map = 'Virdis'
-
-    line_color = 'grey' if scope == 'overall' else None
-    model_options = dict(log_y=log_sample_size) if model_type == "ols" else dict(frac=1)
-
-    # Plot
-    fig = px.scatter(data, x='Date', y='Sample size', log_y=log_sample_size,
-                     color=color_by, color_discrete_map=color_map,
-                     hover_name=data.Title.apply(lambda t: "<br>".join(textwrap.wrap(t, width=80))),
-                     hover_data='Phenotype',
-                     trendline=model_type, trendline_scope=scope, trendline_color_override=line_color,
-                     trendline_options=model_options,
-                     title='Sample size over time')
-    # Make it pretty
-    fig.update_traces(marker=dict(size=10, opacity=.5))
-    axes_style = dict(mirror=True, ticks='outside', showline=True, linecolor='black', gridcolor='lightgrey')
-    ylabel_note = ' (log scale)' if log_sample_size else ''
-    fig.update_yaxes(title_text=f'<b>Sample size</b>{ylabel_note}', **axes_style)
-    fig.update_xaxes(title_text='Publication date', **axes_style)
-    fig.update_layout(plot_bgcolor='whitesmoke', width=1300, height=400, margin=dict(l=10, r=10, t=25, b=10))
-
-    return fig
-        
 

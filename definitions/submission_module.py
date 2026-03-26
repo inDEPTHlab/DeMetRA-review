@@ -1,5 +1,24 @@
 from shiny import module, ui, reactive
 
+def pub_block_ui(page_id = 'submit_page'):
+    return ui.card(
+            ui.card_header("🗞️ Publication or pre-print info"),
+            
+            ui.input_text(f"{page_id}_title", ui.h6("Title", style="font-weight:bold"),
+                          placeholder="Full paper title", width="100%"),
+            ui.input_text(f"{page_id}_author", ui.h6("Author(s)", style="font-weight:bold"),
+                              placeholder="e.g. Smith et al.", width="100%"),
+            
+            ui.layout_columns(
+                ui.input_text(f"{page_id}_doi", ui.h6("DOI", style="font-weight:bold"),
+                              placeholder="e.g. 10.1000/xyz123", width="100%"),
+                ui.input_text(f"{page_id}_journal", ui.h6("Journal", style="font-weight:bold"),
+                              placeholder="e.g. medRxiv, Journal of Epigenetics", width="100%"),
+                ui.input_date(f"{page_id}_year", ui.h6("Publication date", style="font-weight:bold"),
+                                 value=None, # Defaults to today
+                                 min="2000-01-01", max=None),
+                col_widths=[5, 4, 3])
+        )
 
 @module.ui
 def mps_block_ui(idx: int):

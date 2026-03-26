@@ -1,0 +1,42 @@
+name: Merge submissions into main table
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  merge:
+    permissions:
+      contents: write
+    if: >
+      ${{ github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       contains(github.event.pull_request.labels.*.name, 'submission')) }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: pip install -r requirements.txt
+
+      - name: Merge new submissions, update metadata
+        run: python -m dynamic_cache.merge_new_submissions
+
+      - name: Regenerate Plotly figure cache
+        run: python -m dynamic_cache.generate_figures
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "Auto-merge submissions + regenerate figure cache"
+          file_pattern: |
+            assets/MPS_table_cleaned.csv
+            assets/archived_submissions/*
+            dynamic_cache/*.json
+
+

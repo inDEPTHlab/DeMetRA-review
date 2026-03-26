@@ -32,15 +32,12 @@ def _():
 
     from pyprojroot.here import here
 
-    import pandas as pd
-    import numpy as np
-
     from data_preprocessing_helpers import read_sys_review, read_bibliography, inspect_variable_levels, summarize_dimension_reduction_strategies, count_categories_per_phenotype, replace_multiples, clean_n_CpGs, coerce_to_numeric, aggregate_values
 
     proj_folder = str(here())
-    assets_directory = f'{proj_folder}/assets/'
+    assets_directory = f'{proj_folder}/assets/review_2025'
 
-    sys_review_file = 'MPS_review_systematic_2025-08-14.xlsx' # 'MPS_review_systematic_2025-02-14.xlsx'
+    sys_review_file = 'MPS_review_systematic_2025-08-14.xlsx'
     bibliograp_file = 'Bibliography_2025-07-25.txt'
 
     return (
@@ -343,7 +340,7 @@ def _(mps_base_matched, pub_table):
 def _(mo):
     mo.md(
         r"""
-    ### Mearge target and base samples
+    ### Merge target and base samples
 
     <ins>Note</ins>:&emsp;base -> "development dataset"; <br>&emsp;&emsp;&emsp; target -> "application dataset"
     """
@@ -564,11 +561,37 @@ def _(
     mps_table_clean,
     pub_table_clean,
 ):
-    mps_table_clean.to_csv(f'{assets_directory}MPS_table_cleaned.csv', index=False)
-    pub_table_clean.to_csv(f'{assets_directory}Publication_table_cleaned.csv', index=False)
+    mps_table_clean.to_csv(f'{assets_directory}/MPS_table_cleaned.csv', index=False)
+    pub_table_clean.to_csv(f'{assets_directory}/Publication_table_cleaned.csv', index=False)
 
-    mps_base_matched_clean.to_csv(f'{assets_directory}MPS_base_matched_cleaned.csv', index=False)
-    return
+    mps_base_matched_clean.to_csv(f'{assets_directory}/MPS_base_matched_cleaned.csv', index=False)
+
+    # Save minimum info version to update regularly 
+    mps_table_min = mps_table_clean[['Phenotype', 'Category', 'n CpGs',
+        'Author', 'Year', 'Title', 'DOI', 'Based on', 'Sample type', 'Sample size', 
+        'Developmental period', 'Tissue', 'Array', 'Ancestry', 'Author_list', 'Date']]
+        # DROPPING:
+        # 'n Cases', 'n Controls', 
+        # ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
+        # [f'Dimension reduction ({i})' for i in range(1, 6)] +
+        # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
+        #  'Comparison', 'Missing_value_note', 'Covariates']
+
+    pub_table_min = pub_table_clean[['Author', 'Year', 'Title', 'Journal','DOI','n MPSs', 
+        'Phenotype(s)', 'Category', 'n CpGs', 'Based on', 'Sample type', 'Sample size', 
+        'Developmental period', 'Tissue', 'Array', 'Ancestry', 'Author_list', 'Date']]
+        # DROPPING:
+        # 'n Cases', 'n Controls',
+        # ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
+        # [f'Dimension reduction ({i})' for i in range(1, 6)] +
+        # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
+        #  'Comparison', 'Missing_value_note', 'Covariates']
+
+
+    mps_table_min.to_csv(f'{assets_directory}/../mps_table.csv', index=False)
+    pub_table_min.to_csv(f'{assets_directory}/../pub_table.csv', index=False)
+
+    return mps_table_min, pub_table_min
 
 
 @app.cell(hide_code=True)
