@@ -2,7 +2,7 @@ from pathlib import Path
 from shiny import App, ui
 
 from definitions.app_ui import (
-    overview_page, explore_page, review_page, submit_page,
+    overview_page, explore_page, review_page, submit_page, github_link,
 )
 
 from definitions.app_server import app_server
@@ -18,6 +18,11 @@ app_ui = ui.page_fluid(
         explore_page(),
         review_page(),
         submit_page(),
+
+         
+        ui.nav_spacer(),  # Pushes the next item(s) to the right
+        github_link('https://github.com/inDEPTHlab/DeMetRA-review'),
+
         id="navbar",
         
         navbar_options=ui.navbar_options(position='fixed-top',  bg='#bac2f9'),

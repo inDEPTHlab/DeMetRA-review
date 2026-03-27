@@ -67,6 +67,13 @@ def var_checkbox(page_id, variable, title=None):
                                    choices=_options,
                                    selected=_options, inline = True)
 
+def category_note(category: str, info: str) -> str:
+
+    category_color = f"--light-Category-{category.replace(" ", "_")}"
+
+    return f" ◼ <span style='background-color:var({category_color}); "\
+           f"padding:1px 5px; border-radius:3px;'>{category}</span>"\
+           f" — {info}<br>"
 
 def overview_page(page_id='overview_page'):
     return ui.nav_panel("Overview",
@@ -101,9 +108,24 @@ def overview_page(page_id='overview_page'):
                                                selected="mps_table",
                                                inline=True),
                         ui.output_data_frame("overview_page_table"),
+
                         ui.markdown(
-                            "*<ins>Note</ins>: Rows in the table are colored "\
-                            "based on the *Category* assigned to the corresponding MPS."),
+                            "*<ins>Notes</ins>*<br>Rows are colored by the *Category* of the MPS:<br>"
+                            + category_note("Biological markers", 
+                                            "Molecular or cellular processes (e.g. immune function, biological ageing).")
+                            + category_note("Genetic syndromes", 
+                                            "Conditions with a known genetic aetiology (e.g. Down syndrome, Fragile X).")
+                            + category_note("Lifestyle and environment",   
+                                            "Prenatal or postnatal exposures such as smoking, diet, or socioeconomic adversity.")
+                            + category_note("Physical health indicators",
+                                            "Cardiometabolic, growth, or other somatic health outcomes.")
+                            + category_note("Neuro-psychiatric health indicators", 
+                                            "Neurodevelopmental or psychiatric conditions (e.g. ADHD, ASD, depression).")
+                            + category_note("Cancer",
+                                            "Paediatric cancer or cancer risk.")
+                            + "**Sample size** refers to the *internal validation* sample; "
+                            "where studies used a train-test split, the total sample size across subsets is reported."
+                            )
                         )
 
 def explore_page(page_id='explore_page'):
@@ -218,3 +240,10 @@ def submit_page(page_id="submit_page"):
         ),
         ui.output_ui(f"{page_id}_result")
     )
+
+def github_link(gh_repo):
+    return ui.nav_control(
+        ui.a(fa.icon_svg("github", fill='var(--demetra-darkblue)', width="26px", height="26px"),
+             href=gh_repo,
+             target="_blank", style="margin-left: 20px; vertical-align: top;")
+        )
