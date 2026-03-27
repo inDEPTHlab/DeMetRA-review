@@ -1,8 +1,8 @@
 from pathlib import Path
+import pandas as pd
 from datetime import datetime
 import networkx as nx
 import pickle
-import pandas as pd
 import json
 
 proj_dir = Path(__file__).parent.parent.resolve()

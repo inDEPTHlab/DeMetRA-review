@@ -1,6 +1,7 @@
-import plotly.io as pio
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+import plotly.io as pio
 
 from definitions.plotting_funcs import (
     _multilevel_piechart,

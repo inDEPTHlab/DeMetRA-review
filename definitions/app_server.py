@@ -1,9 +1,10 @@
-import json
-import plotly.io as pio
 from pathlib import Path
 
 from shiny import reactive, render, ui
 from shinywidgets import render_plotly
+
+import plotly.io as pio
+import json
 
 from definitions.submission_module import mps_block_ui, mps_block_server
 from definitions.submission_validator import validate_and_structure

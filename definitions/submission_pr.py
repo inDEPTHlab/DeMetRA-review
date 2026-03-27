@@ -1,10 +1,8 @@
-import unicodedata
-import re
-
-import os
-from datetime import datetime
-
 import pandas as pd
+import os
+import re
+import unicodedata
+from datetime import datetime
 from github import Github
 
 def extract_author_slug(author_raw: str) -> str:

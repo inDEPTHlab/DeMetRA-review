@@ -1,11 +1,9 @@
 from shiny import ui
-import faicons as fa
-
 from shinywidgets import output_widget
+import faicons as fa
 
 from definitions.table_reactivity import mps_table
 from definitions.submission_module import pub_block_ui, mps_block_ui
-import definitions.layout_styles as style
 
 
 def add_value_box(value, label, icon, title='', value_style=None):

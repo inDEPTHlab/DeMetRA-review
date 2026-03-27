@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import ast 
 import textwrap
 
-import definitions.layout_styles as styles
+from definitions.color_maps import COLOR_MAPS
 
 main_dir = Path(__file__).parent.parent
 
@@ -28,7 +28,7 @@ def _multilevel_piechart(data, lvl1='Category', lvl2='Phenotype', color_by="Cate
     counts = data[[lvl1, lvl2]].value_counts().reset_index()
     counts = counts.merge(data.groupby(lvl2)['Title'].nunique().reset_index(), on=lvl2)
 
-    color_map = styles.COLOR_MAPS.get(color_by, {})
+    color_map = COLOR_MAPS.get(color_by, {})
 
     cat_totals = counts.groupby(lvl1)['count'].sum().reset_index()
 
@@ -72,7 +72,7 @@ def _phenotype_pub_counts(data, min_publications=3, fig_width=300, fig_height=80
     Horizontal bar chart of publication count per phenotype, colored by category.
     Only phenotypes in at least `min_publications` publications are shown.
     """
-    color_map = styles.COLOR_MAPS.get('Category', {})
+    color_map = COLOR_MAPS.get('Category', {})
 
     agg = (
         data.groupby('Phenotype')
@@ -121,7 +121,7 @@ def _mps_count_histogram(data, fig_width=1700, fig_height=390):
                      'Physical health indicators': '#fc9ead',
                      'Neuro-psychiatric health indicators': '#7e04b3',
                      'Cancer': '#a21414'}
-    # styles.COLOR_MAPS['Category']
+    # COLOR_MAPS['Category']
     color_map['Mixed'] = 'grey'
 
     fig = px.histogram(
@@ -154,8 +154,8 @@ def _category_over_years(data, color_by='Category',
        Histogram of counts (y axis) vs. publication year (x axis)
     """
     # Color set-up
-    if color_by in styles.COLOR_MAPS.keys():
-        color_map = styles.COLOR_MAPS[color_by]
+    if color_by in COLOR_MAPS.keys():
+        color_map = COLOR_MAPS[color_by]
     else:
         color_map = "Virdis"
 
@@ -220,7 +220,7 @@ def _publication_histogram(data: pd.DataFrame, min_count: int = 1,
     )
 
     # ── Plot ──────────────────────────────────────────────────────
-    color_map = {**styles.COLOR_MAPS["Category"], "Mixed": "grey", "Unknown": "lightgrey"}
+    color_map = {**COLOR_MAPS["Category"], "Mixed": "grey", "Unknown": "lightgrey"}
 
     fig = px.histogram(
         filtered,
@@ -281,7 +281,7 @@ def _publication_network(data, nx_file, fig_width=1300, fig_height=900):
             node_title = node.split('Paper/')[1]
             try: 
                 node_category = pub_category.loc[pub_category['Title']==node_title, 'Publication category'].iloc[0]
-                node_color = 'grey' if node_category == 'Mixed' else styles.COLOR_MAPS['Category'][node_category]
+                node_color = 'grey' if node_category == 'Mixed' else COLOR_MAPS['Category'][node_category]
             except:
                 # Matching went wrong, check input 
                 print(node_title)
@@ -334,8 +334,8 @@ def _sample_size_over_time(data, color_by='Category',
     Scatterplot of sample size (y axis) vs. publication date (x axis)
     """
     # Color set-up
-    if color_by in styles.COLOR_MAPS.keys():
-        color_map = styles.COLOR_MAPS[color_by]
+    if color_by in COLOR_MAPS.keys():
+        color_map = COLOR_MAPS[color_by]
     else:
         color_map = 'Virdis'
 
@@ -519,7 +519,7 @@ def display_match(ax, match, fs=22, note=None):
 
 
 def _single_sankey(var, right_label_order, left_label_order, df = base_targ_data, note=None,
-                   filter = None, color_maps = styles.COLOR_MAPS, 
+                   filter = None, color_maps = COLOR_MAPS, 
                    fig_width=8, fig_height=10):
     '''Draw a single sankey diagram for a given variable'''
 

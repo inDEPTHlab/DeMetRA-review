@@ -86,7 +86,10 @@ def _filter_litreview_table(selected_category, selected_phenotype, selected_peri
 
     if len(selected_phenotype) > 0:
         v_name = 'Phenotype' if which_table == 'mps_table' else 'Phenotype(s)'
-        table = table.loc[table[v_name].str.contains('|'.join(list(selected_phenotype)), na=False, regex=True), ]
+        table = table.loc[
+            table[v_name].str.contains('|'.join([re.escape(p) for p in list(selected_phenotype)]), na=False, regex=True),]
+            # use re.escape to handle e.g. "Some diagnosis (SD)" phenotypes 
+        # table = table.loc[table[v_name].str.contains('|'.join(list(selected_phenotype)), na=False, regex=True), ]
 
     if len(selected_period) > 0:
         table = table.loc[table['Developmental period'].str.contains('|'.join(list(selected_period)), na=False, regex=True), ]
