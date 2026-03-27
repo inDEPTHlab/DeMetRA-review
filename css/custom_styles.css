@@ -4,7 +4,9 @@
 :root {
     --demetra-purple: #4b61ef;
     --demetra-darkblue: #001078;
-    --demetra-lightpink: #f9ebff;
+    --demetra-lightpurple: #bac2f9;
+    /* --demetra-lightpink: #f9ebff; */
+    --demetra-lightpink: #eceefdff;
     --demetra-darkpink: #d3a1e9ff;
 
     --Category-Biological_markers: #113ab7;
@@ -24,24 +26,41 @@
 }
 
 /* Style main navigation bar */
-.navbar {
+/* .navbar {
     background-color: var(--demetra-purple) !important;
-}
-
-.navbar-brand {
-    color: white !important;
-    font-size: 16px;
-    font-weight: 700;
-}
+} */
 
 .navbar .nav-link {
-    color: white !important;
-    font-size: 14px;
+    color: var(--demetra-darkblue) !important;
+    font-size: 16px;
+}
+
+/* links */
+
+a:not(.nav-link) {
+    color:  var(--demetra-purple) !important;
+}
+
+a:not(.nav-link):hover {
+    color: var(--demetra-darkblue) !important;
 }
 
 .card-header {
     /* color: var(--demetra-darkblue) !important; */
     background: var(--demetra-lightpink) !important; 
+}
+
+/* FA icons */
+/* svg.fa-svg {
+    color: #4b61ef;
+    fill: #4b61ef;
+} */
+
+
+.selection-pane {
+    padding: 15px 25px;
+    border-radius: 15px;
+    background-color: var(--demetra-lightpink);
 }
 
 /* Style slider */
@@ -54,22 +73,25 @@
 }
 
 /* Style checkboxes */
-.shiny-input-container .checkbox input[type="checkbox"] {
-    border: 1px solid var(--demetra-purple);
+.shiny-input-container .checkbox-inline input[type="checkbox"] {
+    border: 1px solid var(--demetra-purple) !important;
     margin-left: 7px;
 }
-.shiny-input-container .checkbox input[type="checkbox"]:checked {
-    background-color: var(--demetra-purple);
+.shiny-input-container .checkbox-inline input[type="checkbox"]:checked {
+    background-color: var(--demetra-purple) !important;
+}
+.shiny-input-container .checkbox-inline label {
+    font-size: 0.6em;
 }
 
 /* Style radio buttons */
 .shiny-input-container .radio-inline input[type="radio"] {
-    border: 1px solid var(--demetra-purple);
+    border: 1px solid var(--demetra-purple) !important;
     margin-left: 7px;
 
 }
 .shiny-input-container .radio-inline input[type="radio"]:checked {
-    background-color: var(--demetra-purple);
+    background-color: var(--demetra-purple) !important;
 }
 
 
@@ -110,7 +132,7 @@ body {
 }
 
 .btn-demetra:hover {
-    background-color: var(--demetra-darkpink);   /* darker shade on hover */
+    background-color: var(--demetra-lightpurple);   /* darker shade on hover */
     color: #000000; 
 }
 

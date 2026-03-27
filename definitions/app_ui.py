@@ -56,6 +56,7 @@ def var_slider(page_id, variable, title=None):
                            width='90%',
                            sep="")
 
+
 def var_checkbox(page_id, variable, title=None):
     
     _options = sorted([f for f in mps_table[variable].unique()])
@@ -66,7 +67,7 @@ def var_checkbox(page_id, variable, title=None):
     return ui.input_checkbox_group(id=f'{page_id}_{variable_id}',
                                    label=ui.h6(title, style='font-weight: bold;'),
                                    choices=_options,
-                                   selected=_options)
+                                   selected=_options, inline = True)
 
 
 def overview_page(page_id='overview_page'):
@@ -95,7 +96,7 @@ def overview_page(page_id='overview_page'):
                              var_checkbox(page_id, "Based on"),
                              col_widths=(3, 3, 2, 2, 2),
                              gap='9px',
-                             style=style.SELECTION_PANE),
+                             class_="selection-pane"),
                         ui.input_radio_buttons(id='overview_page_which_table', label="", 
                                                choices={'mps_table': 'Show all MPSs',
                                                         'pub_table': 'Group by publication'},

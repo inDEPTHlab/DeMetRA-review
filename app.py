@@ -19,7 +19,13 @@ app_ui = ui.page_fluid(
         review_page(),
         submit_page(),
         id="navbar",
-        title="DeMetRA : Developmental Methylation Risk Atlas",
+        
+        navbar_options=ui.navbar_options(position='fixed-top',  bg='#bac2f9'),
+        fillable=True,
+        padding=[120, 10, 20],  # top, left-right, bottom in px (page)
+        title=ui.img(src='logo.png', alt='DeMetRA', height='80px'),
+        window_title='DeMetRA',
+        # title="DeMetRA : Developmental Methylation Risk Atlas",
     ),
 )
 
