@@ -118,6 +118,11 @@ body {
     align-items: center; /* Center the content vertically */
 }
 
+/* Scoped to submission cards only */
+.card, .card-body {
+    overflow: visible !important;
+}
+
 /* ── DeMetRA button ─────────────────────────────────────── */
 .btn-demetra {
     background-color: var(--demetra-lightpink);
@@ -178,4 +183,10 @@ body {
 .submit-result-error ul {
     margin: 8px 0 0 0;
     padding-left: 18px;
+}
+
+/* Wider tooltip */
+.tooltip-inner {
+    max-width: 500px !important;   /* default is 200px, adjust as needed */
+    text-align: left !important;
 }
