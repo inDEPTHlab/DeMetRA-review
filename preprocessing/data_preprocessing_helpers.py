@@ -70,10 +70,11 @@ def summarize_dimension_reduction_strategies(Main, Base):
     tab_dict = {s: df[s].value_counts(dropna=False).sort_index() for s in strategies}
 
     stacked_strategies = df.stack().reset_index(drop=True)
-    conbined_strategies = df.astype(str).agg(" --- ".join, axis=1)
+    # conbined_strategies = df.astype(str).agg(" --- ".join, axis=1)
+    combined_strategies = df.apply(lambda row: " --- ".join(row.dropna().astype(str)), axis=1)
 
     tab_dict["All_strategies"] = stacked_strategies.value_counts(dropna=False).sort_index()
-    tab_dict["Combined_strategies"] = conbined_strategies.value_counts(dropna=False)
+    tab_dict["Combined_strategies"] = combined_strategies.value_counts(dropna=False)
 
     tabs = mo.ui.tabs(tab_dict)
     return(tabs)

@@ -18,6 +18,10 @@ pub_table = pd.read_csv(f'{assets_dir}/pub_table.csv', parse_dates=['Date'])
 mps_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI  </a>') for doi in mps_table['DOI']]
 pub_table[' '] = [ui.markdown(f'<a href="https://doi.org/{doi}" target="_blank">DOI  </a>') for doi in pub_table['DOI']]
 
+# Turn Reference (Development sample) into a clickable link
+mps_table['  '] = [ui.markdown(f'<a href="{ref}" target="_blank">Reference  </a>') if pd.notna(ref) and ref != '' else '' 
+    for ref in mps_table['Reference']]
+
 # Display lists inside cells as bullet points
 def list_to_html(cell):
     ul_element = '<ul style="margin-left:0; padding-left:0;">'
@@ -64,7 +68,7 @@ def list_to_html(cell):
     return cell
 
 mps_table_show = mps_table[['Phenotype', 'Category', 'n CpGs',
-                            'Author', 'Year', 'Title', ' ', 'Based on',
+                            'Author', 'Year', 'Title', ' ', 'Based on', '  ',
                             'Sample type', 'Sample size', # 'n Cases', 'n Controls', 
                             'Developmental period', 'Tissue', 'Array', 'Ancestry']]
                            
