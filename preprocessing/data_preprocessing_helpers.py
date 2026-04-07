@@ -1,5 +1,6 @@
 import marimo as mo
 import pandas as pd
+import re
 
 from dateutil.parser import parse as parse_date
 
@@ -158,6 +159,50 @@ def coerce_to_numeric(df, old_var, new_var):
         print('\nThese values are coerced to NA:\n', coerced_values)
 
     return df
+
+# Handle [development] reference links ------------------------------
+
+def extract_ref(value):
+    if pd.isna(value):
+        return value
+
+    # Match "Multiple (...)" with optional space before "("
+    match = re.match(r'^(Multiple\s*)\((.+)\)$', value.strip(), re.DOTALL)
+    if match:
+        prefix = match.group(1)   # preserves "Multiple " spacing
+        inner  = match.group(2)
+        # Split ONLY at ", " followed by a new Author (Year) entry
+        elements = re.split(r',\s*(?=[A-ZÀ-ÿ][A-Za-zÀ-ÿ\-]+\s*\(\d{4}\))', inner)
+        parts = [e.split(" - ")[0].strip() for e in elements]
+        return f"{prefix}({', '.join(parts)})"
+
+    # Normal case
+    return value.split(" - ")[0].strip()
+
+def extract_multiple_refs(ref_str):
+    inner = re.match(r'^Multiple\s*\((.+)\)$', ref_str.strip(), re.DOTALL).group(1)
+    parts = re.split(r',\s*(?=[A-ZÀ-ÿ][A-Za-zÀ-ÿ\-]+\s*\(\d{4}\))', inner)
+    return [p.strip() for p in parts]
+
+def extract_multiple_links(link_str):
+    inner = re.match(r'^Multiple\s*\((.+)\)$', link_str.strip(), re.DOTALL).group(1)
+    return [u.strip().rstrip(',') for u in re.findall(r'https?://[^\s,\)]+', inner)]
+
+def merge_ref_link(ref, link):
+    if pd.isna(ref) or pd.isna(link):
+        return ref
+
+    ref_is_multiple  = bool(re.match(r'^Multiple\s*\(', str(ref).strip()))
+    link_is_multiple = bool(re.match(r'^Multiple\s*\(', str(link).strip()))
+
+    if ref_is_multiple and link_is_multiple:
+        prefix = re.match(r'^(Multiple\s*)', ref.strip()).group(1)
+        refs  = extract_multiple_refs(ref)
+        links = extract_multiple_links(link)
+        pairs = [f"[{r}]({l})" for r, l in zip(refs, links)]
+        return f"{prefix}({', '.join(pairs)})"
+    else:
+        return f"[{str(ref).strip()}]({str(link).strip()})"
 
 # Bibliography ===============================================================
 

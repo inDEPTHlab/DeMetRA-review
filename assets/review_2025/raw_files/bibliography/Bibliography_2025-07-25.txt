@@ -3382,7 +3382,7 @@ PY  - 2024
 SN  - 1476-5438
 SP  - 619-629
 ST  - Identification of the DNA methylation signature of Mowat-Wilson syndrome
-T2  - European Journal of Human Genetics
+T2  - Eur J Hum Genet
 TI  - Identification of the DNA methylation signature of Mowat-Wilson syndrome
 UR  - https://doi.org/10.1038/s41431-024-01548-4
 VL  - 32

@@ -9,7 +9,7 @@
 
 import marimo
 
-__generated_with = "0.22.0"
+__generated_with = "0.22.4"
 app = marimo.App(width="medium")
 
 
@@ -32,7 +32,7 @@ def _():
 
     from pyprojroot.here import here
 
-    from data_preprocessing_helpers import read_sys_review, read_bibliography, inspect_variable_levels, summarize_dimension_reduction_strategies, count_categories_per_phenotype, replace_multiples, clean_n_CpGs, coerce_to_numeric, aggregate_values
+    from data_preprocessing_helpers import read_sys_review, read_bibliography, inspect_variable_levels, summarize_dimension_reduction_strategies, count_categories_per_phenotype, replace_multiples, clean_n_CpGs, coerce_to_numeric, aggregate_values, extract_ref, merge_ref_link
 
     proj_folder = str(here())
     assets_directory = f'{proj_folder}/assets/review_2025'
@@ -46,7 +46,9 @@ def _():
         clean_n_CpGs,
         coerce_to_numeric,
         count_categories_per_phenotype,
+        extract_ref,
         inspect_variable_levels,
+        merge_ref_link,
         mo,
         read_bibliography,
         read_sys_review,
@@ -307,29 +309,6 @@ def _(aggregate_values, mps_table):
     return (pub_table,)
 
 
-@app.cell
-def _(mps_base_matched, pub_table):
-    pub_table['Dimension reduction (1)'][pub_table['Dimension reduction (1)'].str.contains('Multiple (', regex=False
-                                                                                          )].value_counts()
-
-    mps_base_matched['Ancestry [development]'] = mps_base_matched['Ancestry [development]'].replace({
-        'Multiple (Association DNAm phenotype | P-value | ?, None)': '[Association DNAm phenotype | P-value | ?; None]',
-        'Multiple (Association DNAm phenotype | P-value | bonferroni < .05, Association DNAm phenotype | P-value | FDR < .05)': 'Association DNAm phenotype | P-value | [bonferroni < .05; FDR < .05]',
-        'Multiple (Association DNAm phenotype | P-value | top-ranking 100, Association DNAm phenotype | P-value | top-ranking 1000, Association DNAm phenotype | P-value | top-ranking 10000, Association DNAm phenotype | P-value | top-ranking 20, Association DNAm phenotype | P-value | top-ranking 50, Association DNAm phenotype | P-value | top-ranking 500, Association DNAm phenotype | P-value | top-ranking 5000)': '',
-        'Multiple (Association DNAm phenotype | P-value | p < .1, Association DNAm phenotype | P-value | p < .01, Association DNAm phenotype | P-value | p < .001, Association DNAm phenotype | P-value | p < 1e-4, Association DNAm phenotype | P-value | p < 1e-5)': '',
-        'Multiple (Association DNAm phenotype | P-value | FDR < .05, None)': '',
-        'Multiple (None, Biological relevance | Functional annotation | Included in EpiSign)': '',
-        'Multiple (Association DNAm phenotype | P-value | p < .05, Association DNAm phenotype | P-value | adjusted p < .05)': '',
-        'Multiple (Association DNAm phenotype | P-value | top-ranking ?, Association DNAm phenotype | P-value | top-ranking 200)': '',
-        'Multiple (Association DNAm phenotype | P-value | top-ranking 1000, Association DNAm phenotype | P-value | top-ranking 900-1000)': '',
-        'Multiple (Association DNAm phenotype | Methylation change | > 15%, Association DNAm phenotype | Methylation change | > 5%, Association DNAm phenotype | Methylation change | > 20%, Association DNAm phenotype | Methylation change | > 10%, Association DNAm phenotype | Methylation change | > 25%)': '',
-        'Multiple (Association DNAm phenotype | P-value | top-ranking 1000, None)': '',
-        'Multiple (Association DNAm phenotype | P-value | p < 1e-5, None)': '',
-        'Multiple (None, Association DNAm phenotype | P-value | Multiple cut-offs [thresholding])': '',
-        'Multiple (None, Biological relevance | Mean methylation | Zero variance)': ''})
-    return
-
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -451,8 +430,42 @@ def _(aggregate_values, base_table_tmp, targ_expanded_clean):
 
 
 @app.cell
+def _(mps_base_matched, pub_table):
+    pub_table['Dimension reduction (1)'][pub_table['Dimension reduction (1)'].str.contains('Multiple (', regex=False
+                                                                                          )].value_counts()
+
+    mps_base_matched['Ancestry [development]'] = mps_base_matched['Ancestry [development]'].replace({
+        'Multiple (Association DNAm phenotype | P-value | ?, None)': '[Association DNAm phenotype | P-value | ?; None]',
+        'Multiple (Association DNAm phenotype | P-value | bonferroni < .05, Association DNAm phenotype | P-value | FDR < .05)': 'Association DNAm phenotype | P-value | [bonferroni < .05; FDR < .05]',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking 100, Association DNAm phenotype | P-value | top-ranking 1000, Association DNAm phenotype | P-value | top-ranking 10000, Association DNAm phenotype | P-value | top-ranking 20, Association DNAm phenotype | P-value | top-ranking 50, Association DNAm phenotype | P-value | top-ranking 500, Association DNAm phenotype | P-value | top-ranking 5000)': '',
+        'Multiple (Association DNAm phenotype | P-value | p < .1, Association DNAm phenotype | P-value | p < .01, Association DNAm phenotype | P-value | p < .001, Association DNAm phenotype | P-value | p < 1e-4, Association DNAm phenotype | P-value | p < 1e-5)': '',
+        'Multiple (Association DNAm phenotype | P-value | FDR < .05, None)': '',
+        'Multiple (None, Biological relevance | Functional annotation | Included in EpiSign)': '',
+        'Multiple (Association DNAm phenotype | P-value | p < .05, Association DNAm phenotype | P-value | adjusted p < .05)': '',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking ?, Association DNAm phenotype | P-value | top-ranking 200)': '',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking 1000, Association DNAm phenotype | P-value | top-ranking 900-1000)': '',
+        'Multiple (Association DNAm phenotype | Methylation change | > 15%, Association DNAm phenotype | Methylation change | > 5%, Association DNAm phenotype | Methylation change | > 20%, Association DNAm phenotype | Methylation change | > 10%, Association DNAm phenotype | Methylation change | > 25%)': '',
+        'Multiple (Association DNAm phenotype | P-value | top-ranking 1000, None)': '',
+        'Multiple (Association DNAm phenotype | P-value | p < 1e-5, None)': '',
+        'Multiple (None, Association DNAm phenotype | P-value | Multiple cut-offs [thresholding])': '',
+        'Multiple (None, Biological relevance | Mean methylation | Zero variance)': ''})
+    return
+
+
+@app.cell
+def _(extract_ref, merge_ref_link, targ_base_aggre):
+    # Create clean reference name and link (review #1)
+    targ_base_aggre["Reference [development]"] = targ_base_aggre["Identifier_base_expanded"].apply(extract_ref)
+
+    targ_base_aggre["Reference"] = targ_base_aggre.apply(
+        lambda row: merge_ref_link(row["Reference [development]"], row["Link [development]"]), axis=1
+    )
+    return
+
+
+@app.cell
 def _(targ_base_aggre):
-    targ_base_aggre[['Link [application]', ]]
+    targ_base_aggre[["Reference [development]", "Reference"]]
     return
 
 
@@ -508,7 +521,7 @@ def _(mo, mps_base_matched, mps_table, pub_table):
         'Category [application]', 'Category [development]', 
         'Author', 'Year', 'Title', 
         'n CpGs [application]', 'n CpGs [development]',
-        'Based on', 'Link [development]',
+        'Based on', 'Reference',
         'Sample size [application]', 'Sample size [development]', 
         'n Cases [application]', 'n Cases [development]', 
         'n Controls [application]', 'n Controls [development]', 
@@ -534,14 +547,14 @@ def _(mo, mps_base_matched, mps_table, pub_table):
 
     # Review: add link to development paper 
     mps_table_clean = mps_table.merge(
-        mps_base_matched_clean[["Author", "Year", "Title", "Phenotype [application]", "Link [development]"]],
+        mps_base_matched_clean[["Author", "Year", "Title", "Phenotype [application]", "Reference"]],
         left_on=["Author", "Year", "Title", "Phenotype"],
         right_on=["Author", "Year", "Title", "Phenotype [application]"],
         how="left"
     ).drop(columns="Phenotype [application]")
 
     mps_table_clean = mps_table_clean[['Phenotype', 'Category', 'Author', 'Year', 'Title', 'DOI', 
-                                 'n CpGs', 'Based on', 'Link [development]', 'Sample size', 'n Cases', 'n Controls', 'Sample type', 
+                                 'n CpGs', 'Based on', 'Reference', 'Sample size', 'n Cases', 'n Controls', 'Sample type', 
                                  'Developmental period', 'Tissue', 'Array', 'Ancestry', 
                                  'Publication type', 'Journal'] + 
                                 ['Keywords', 'Abstract', 'Author_list', 'Date'] + 
@@ -577,7 +590,7 @@ def _(
 
     # Save minimum info version to update regularly 
     mps_table_min = mps_table_clean[['Phenotype', 'Category', 'n CpGs',
-        'Author', 'Year', 'Title', 'DOI', 'Based on', 'Link [development]', 'Sample type', 'Sample size', 
+        'Author', 'Year', 'Title', 'DOI', 'Based on', 'Reference', 'Sample type', 'Sample size', 
         'Developmental period', 'Tissue', 'Array', 'Ancestry', 'Author_list', 'Date']]
         # DROPPING:
         # 'n Cases', 'n Controls', 
@@ -585,8 +598,6 @@ def _(
         # [f'Dimension reduction ({i})' for i in range(1, 6)] +
         # ['Weights estimation', 'Internal validation', 'External validation', 'Performance',
         #  'Comparison', 'Missing_value_note', 'Covariates']
-
-    mps_table_min = mps_table_min.rename(columns={'Link [development]': 'Reference'})
 
     pub_table_min = pub_table_clean[['Author', 'Year', 'Title', 'Journal','DOI','n MPSs', 
         'Phenotype(s)', 'Category', 'n CpGs', 'Based on', 'Sample type', 'Sample size', 
@@ -601,6 +612,43 @@ def _(
 
     mps_table_min.to_csv(f'{assets_directory}/../mps_table.csv', index=False)
     pub_table_min.to_csv(f'{assets_directory}/../pub_table.csv', index=False)
+    return (mps_table_min,)
+
+
+@app.cell
+def _(mps_table_min):
+    mps_table_min.groupby('Reference')['Title'].nunique().sort_values(ascending=False)
+    return
+
+
+@app.cell
+def _(mps_table_min):
+    mps_table_min.loc[mps_table_min['Reference'].str.contains('Ligthart (2016)', regex = False), ]
+    return
+
+
+@app.cell
+def _(mps_table_min):
+    r1_sub = mps_table_min.loc[(mps_table_min['Based on'] == 'Pre-established MPS') & (mps_table_min['Phenotype'].str.contains('Maternal smoking', regex = False)), ]
+
+    r2_sub = mps_table_min.loc[(mps_table_min['Based on'] == 'Published summary statistics (semi-supervised)') & (mps_table_min['Phenotype'].str.contains('Maternal smoking', regex = False)), ]
+
+    print(r1_sub.shape[0])
+    print(r1_sub['Title'].nunique())
+
+    print(r2_sub.shape[0])
+    print(r2_sub['Title'].nunique())
+
+
+    { 'r1': r1_sub['Reference'].value_counts(), 
+      'r2': r2_sub['Reference'].value_counts()
+    }
+    return r1_sub, r2_sub
+
+
+@app.cell
+def _(r1_sub, r2_sub):
+    r1_sub['Title'].value_counts().index.intersection(r2_sub['Title'].value_counts().index).shape
     return
 
 
