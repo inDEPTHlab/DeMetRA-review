@@ -78,7 +78,7 @@ mps_table['Ref. (development)'] = [ui.markdown(ref) if pd.notna(ref) and ref != 
 #     return cell
 
 def list_to_html(cell):
-    ul_element = '<ul style="margin-left:0; padding:0; list-style-position:inside; text-align:left;">'
+    ul_element = '<ul class="compact-list">'
 
     if isinstance(cell, str):
         # Normalize Multiple(...) into a list

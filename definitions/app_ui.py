@@ -221,8 +221,9 @@ def submit_page(page_id="submit_page"):
         "Submit your MPS to DeMetRA!",
         ui.markdown(
             "Fill in as many information as you can about the MPS(s) you have developed or "
-            "applied to in a developmental context, then hit the **Submit for review** button. We will "
-            "process your submission as soon as possible and get back to you.<br>"
+            "applied to in a developmental context. The fields marked by **<span style='color:red;'>*</span>** are compulsory. "
+            "Once you are done, hit the **Submit for review** button. We will process your submission as soon as possible "
+            "and get back to you.<br>"
             "Note: something is wrong or missing? Please open an [issue](https://github.com/inDEPTHlab/DeMetRA-review/issues) to let us know!"
         ),
         # ── Publication-level (filled once) ─────────────────────────────

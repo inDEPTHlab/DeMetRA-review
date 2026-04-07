@@ -140,27 +140,16 @@ def app_server(input, output, session):
     def _handle_submission():
         # Collect publication fields 
         pub = {
-            "Author_list":  input[f"{page_id}_author"](),
-            "Date":         input[f"{page_id}_date"](),
-            "Title":        input[f"{page_id}_title"](),
-            "DOI":          input[f"{page_id}_doi"](),
-            "Based_on":     input[f"{page_id}_based_on"](),
-            "Sample_type":  input[f"{page_id}_sample_type"](),
-            "Sample_size":  input[f"{page_id}_sample_size"](),
-            "Tissue":       input[f"{page_id}_tissue"](),
-            "Array":        input[f"{page_id}_array"](),
-            "Ancestry":     input[f"{page_id}_ancestry"](),
+        "Title":       input[f"{page_id}_title"](),
+        "Author_list": input[f"{page_id}_author"](),
+        "Contact":     input[f"{page_id}_contact"](),
+        "DOI":         input[f"{page_id}_doi"](),
+        "Journal":     input[f"{page_id}_journal"](),
+        "Date":        input[f"{page_id}_year"]()
         }
+
         # Collect MPS blocks
-        mps_list = [
-            {"Phenotype":            row["Phenotype"],
-             "Category":             row["Category"],
-             "n_CpGs":               row["n CpGs"],
-             "Developmental_period": row["Developmental period"],
-             "Method":               row["Method"] }
-            for ns_id in mps_ids.get()
-            for row in [mps_getters[ns_id]()]
-        ]
+        mps_list = [mps_getters[ns_id]() for ns_id in mps_ids.get()]
 
         # Validate input and structure data for submission
         validation, df = validate_and_structure(pub, mps_list)

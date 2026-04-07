@@ -27,7 +27,7 @@ def field_name(label: str = "Name", bold: bool = True, blank: bool = False, mb: 
         children.append(ui.tooltip(
             ui.span(fa.icon_svg("circle-info", width="13px", height="13px", fill="var(--demetra-purple)"),
                                 style="margin-left: 5px; margin-bottom: 4px"), 
-            info, placement='right'))
+            ui.markdown(info), placement='right'))
 
     return ui.h6(*children, style=style_str)
 
@@ -57,7 +57,7 @@ def pub_block_ui(page_id = 'submit_page'):
                           placeholder="Full paper title", width="100%"),
             ui.layout_columns(
                 ui.input_text(f"{page_id}_author", field_name("Author(s)", required=True, 
-                              info='Follow Harvard format e.g. "Surname, N., Surname, N.N., ..."'),
+                              info='Follow Harvard format: e.g. "Surname, N., Surname, N.N., ..."'),
                               placeholder="e.g. Scott, M.J., Schrute, D.", width="100%"),
                 ui.input_text(f"{page_id}_contact", field_name("Contact", required=True),
                               placeholder="e.g. m.scott@dundermifflin.com", width="100%"),
@@ -85,7 +85,7 @@ def mps_block_ui(idx: int):
                                suggestions=obs_phenotypes, 
                                placeholder="e.g. ADHD, BMI"),
             input_text_suggest("category", label="Category", required = True,
-                               suggestions=obs_phenotypes, 
+                               suggestions=obs_categories, 
                                placeholder="e.g. Biological markers"),                      
             ui.input_numeric("n_cpgs", field_name("N CpGs", required = True),
                              value=None, min=2, step=1),
@@ -95,12 +95,15 @@ def mps_block_ui(idx: int):
             col_widths=[4, 4, 2, 2], style="align-items: stretch;"
         ),
         ui.layout_columns(
-            ui.input_selectize("based_on", field_name("Based on"),
+            ui.input_selectize("based_on", field_name("Based on", 
+                                info='**Raw individual-level data**: you developed a new MPSs<br> \
+                                **Published summary statistics (semi-supervised)**: you used weights from a published EWAS<br> \
+                                **Pre-established MPS**: you applied an MPS developed in another population.'),
                                choices=["Raw individual-level data", 
                                         "Published summary statistics (semi-supervised)",
                                         "Pre-established MPS"],
                                multiple=False,
-                               selected="Raw individual-level data"),
+                               selected="Raw individual-level data", width='100%'),
             input_text_suggest("array", label="Array", required = True,
                                suggestions=obs_arrays, 
                                placeholder="e.g. EPICv2"),
@@ -113,7 +116,7 @@ def mps_block_ui(idx: int):
                                placeholder="e.g. median age [age range], Adolescence"),
             ui.input_text("ancestry", field_name("Ancestry"),
                           placeholder="e.g. European, Mixed"),
-            col_widths=[3, 2, 2, 3, 2], style="align-items: stretch;"
+            col_widths=[3, 2, 2, 3, 2], style="align-items: stretch;", gap="10px",   
         ),
         ui.output_ui("dev_reference_block"),
         ui.layout_columns(
@@ -130,9 +133,10 @@ def mps_block_ui(idx: int):
                                            selected="R²", multiple=False),
                         ui.input_text("performance_value", '', # field_name(blank=True), 
                                       placeholder="e.g. 0.05", width="100%"),
-                        col_widths=[7, 5], gap="5px"), style="margin-bottom: 0; padding-top: 4px;"
+                        col_widths=[7, 5], gap="5px"), style="margin-bottom: 0; padding-top: 4px; width: 100%;"
             ),
-            ui.input_text("weights_link", field_name("Link to code / MPS weights")),
+            ui.input_text("weights_link", field_name("Link to code / MPS weights"), width='100%', 
+                          placeholder='e.g. https://osf.io/files/, https://github.com/repo'),
             col_widths=[6, 3, 3], style="align-items: stretch;",
         ),
         style="border-left: 2px solid var(--demetra-lightpurple); border-bottom: 4px solid var(--demetra-lightpurple); margin-bottom: 10px;",
@@ -150,12 +154,14 @@ def mps_block_server(input, output, session):
             return None
         
         return ui.layout_columns(
-            ui.input_text("dev_reference", field_name("Development dataset reference (DOI)"),
+            ui.input_text("dev_reference", field_name("Reference (Development dataset)"),
+                          placeholder="e.g. First Author (2026)", width="100%"),
+            ui.input_text("dev_reference_doi", field_name("Reference DOI"),
                           placeholder="e.g. 10.1000/xyz123", width="100%"),
             ui.input_checkbox_group("dev_match", field_name("Matching:"),
                                 choices=["Array", "Tissue", "Developmental period", "Ancestry"],
                                 inline=True),
-            col_widths=[6, 6], style="align-items: stretch;")
+            col_widths=[4, 4, 4], style="align-items: stretch;")
 
     @reactive.Calc
     def values():
@@ -169,8 +175,9 @@ def mps_block_server(input, output, session):
             "Developmental period": input.developmental_period(),
             "Ancestry": input.ancestry(),
             "Based on": input.based_on(),
-            "Development dataset reference": input.dev_reference() if input.based_on() != "Raw individual-level data" else None,
-            "Development dataset match": list(input.dev_match()) if input.based_on() != "Raw individual-level data" else [],
+            "Reference": input.dev_reference() if input.based_on() != "Raw individual-level data" else None,
+            "Reference DOI": input.dev_reference_doi() if input.based_on() != "Raw individual-level data" else None,
+            "Reference match": list(input.dev_match()) if input.based_on() != "Raw individual-level data" else [],
             "Method": input.method(),
             "Performance metric": input.performance_metric(),
             "Performance value": input.performance_value(),

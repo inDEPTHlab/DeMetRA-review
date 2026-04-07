@@ -7,31 +7,6 @@ from dataclasses import dataclass, field
 from typing import Any
 import requests
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-
-VALID_CATEGORIES: list[str] = [
-    "Biological markers",
-    "Genetic syndromes",
-    "Lifestyle and environment",
-    "Physical health indicators",
-    "Neuro-psychiatric health indicators",
-    "Cancer",
-]
-
-# Matches one complete author: "Surname, N." or "Van Den Berg, A. B." or "O'Brien, M."
-# Surname words contain lowercase letters; initials are single capital + period
-_AUTHOR_FIND_RE = re.compile(
-    r"[A-Za-zÀ-ÿ\'][A-Za-zÀ-ÿ\-\']*"              # first surname word
-    r"(?:\s[A-Za-zÀ-ÿ\'][A-Za-zÀ-ÿ\-\']*)*"        # optional extra surname words
-    r",\s*(?:[A-Z]\.\s*)+",                          # comma + one or more initials
-    re.UNICODE,
-)
-
-# Accepted date input formats, in order of preference
-_DATE_FORMATS: list[str] = ["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y"]
-
-
-# ── Validation result ─────────────────────────────────────────────────────────
 
 @dataclass
 class ValidationResult:
@@ -39,8 +14,8 @@ class ValidationResult:
     Accumulates validation errors across all fields.
     `valid` is False as soon as any error is added.
     """
-    valid:  bool                    = True
-    errors: dict[str, list[str]]    = field(default_factory=dict)
+    valid:  bool                 = True
+    errors: dict[str, list[str]] = field(default_factory=dict)
 
     def add_error(self, field_name: str, message: str) -> None:
         self.valid = False
@@ -54,30 +29,43 @@ class ValidationResult:
             for msg in messages
         ]
 
-
 # ── Field-level validators ────────────────────────────────────────────────────
 
-def _check_required_string(
-    value:      Any,
+def _unwrap(value: Any) -> str:
+    """Unwrap selectize single-value tuples/lists → plain string."""
+    if isinstance(value, (list, tuple)):
+        return value[0] if value else ""
+    return value if value is not None else ""
+
+
+def _check_string(
+    element: Any,
     field_name: str,
-    result:     ValidationResult,
-    min_length: int = 1,
-) -> str | None:
+    result: ValidationResult,
+    context: str = "",
+    required: bool = False,
+    min_length: int = 1) -> str | None:
     """
     Validates a required non-empty string.
     Returns the stripped string on success, None on failure.
     """
-    if not isinstance(value, str) or len(value.strip()) < min_length:
+    value = element.get(field_name)
+   
+    s = _unwrap(value).strip()
+
+    if required: 
+        return s
+    
+    if len(s) < min_length:
+
+        if context != '':
+            field_name = f"{context} - {field_name}"
+
         result.add_error(field_name, "Required — cannot be empty.")
-        return None
-    return value.strip()
 
-
-def _check_optional_string(value: Any) -> str:
-    """Returns a stripped string or empty string for optional fields."""
-    if isinstance(value, str):
-        return value.strip()
-    return ""
+        return ""
+       
+    return s
 
 
 def _check_author_list(raw: Any, result: ValidationResult) -> list[str] | str |  None:
@@ -92,10 +80,19 @@ def _check_author_list(raw: Any, result: ValidationResult) -> list[str] | str | 
     if not isinstance(raw, str) or not raw.strip():
         result.add_error(
             "Author list",
-            "Required — provide authors in 'Surname, N.' format, "
+            "Required — provide authors in Harvard format, "
             "e.g. 'Smith, J., Van Den Berg, A. B., O\\'Brien, M.'",
         )
         return None
+    
+    # Matches one complete author: "Surname, N." or "Van Den Berg, A. B." or "O'Brien, M."
+    # Surname words contain lowercase letters; initials are single capital + period
+    _AUTHOR_FIND_RE = re.compile(
+        r"[A-Za-zÀ-ÿ\'][A-Za-zÀ-ÿ\-\']*"          # first surname word
+        r"(?:\s[A-Za-zÀ-ÿ\'][A-Za-zÀ-ÿ\-\']*)*"   # optional extra surname words
+        r",\s*(?:[A-Z]\.\s*)+",                   # comma + one or more initials
+        re.UNICODE,
+    )
 
     authors = [m.strip() for m in _AUTHOR_FIND_RE.findall(raw)]
 
@@ -109,10 +106,9 @@ def _check_author_list(raw: Any, result: ValidationResult) -> list[str] | str | 
 
     # Coverage check: warn if large parts of the string were not matched
     matched_chars = sum(len(a) for a in authors)
-    total_chars   = len(re.sub(r"[\s,.]", "", raw))
-    coverage      = matched_chars / total_chars if total_chars else 1
-
-    if coverage < 0.75:
+    total_chars = len(re.sub(r"[\s,.]", "", raw))
+    
+    if total_chars and (matched_chars / total_chars) < 0.75:
         result.add_error(
             "Author list",
             f"Some names could not be parsed — found {authors}. "
@@ -170,34 +166,34 @@ def _check_doi(raw: Any, result: ValidationResult) -> str | None:
     return doi
 
 
-def _check_date(raw: Any, result: ValidationResult) -> str | None:
-    """
-    Parses a date string in any of the accepted formats.
-    Returns a normalised 'YYYY-MM-DD' string on success, None on failure.
-    """
-    if not raw:
+def _check_contact(value, result):
+    _EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+
+    s = _unwrap(value).strip()
+
+    if not s:
+        result.add_error("Contact", "Required — cannot be empty.")
+        return None
+    if not _EMAIL_RE.match(s):
+        result.add_error("Contact", f"'{s}' is not a valid email address.")
+        return None
+    return s
+
+def _check_date(raw, result):
+    if raw is None:
         result.add_error("Date", "Required.")
         return None
-
-    for fmt in _DATE_FORMATS:
-        try:
-            return datetime.strptime(str(raw).strip(), fmt).strftime("%Y-%m-%d")
-        except ValueError:
-            continue
-
-    result.add_error(
-        "Date",
-        f"Unrecognised date format '{raw}'. "
-        f"Accepted formats: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, YYYY.",
-    )
-    return None
+    if raw > datetime.today().date():
+        result.add_error("Date", "Publication date cannot be in the future.")
+        return None
+    return raw.strftime("%Y-%m-%d")
 
 
 def _check_non_negative_int(
     value:      Any,
     field_name: str,
     result:     ValidationResult,
-    minimum:    int = 0,
+    minimum:    int = 1,
 ) -> int | None:
     """
     Validates an integer value with an optional minimum.
@@ -215,23 +211,6 @@ def _check_non_negative_int(
         result.add_error(field_name, f"Must be ≥ {minimum} (got {v}).")
         return None
     return v
-
-
-def _check_category(value: Any, field_name: str, result: ValidationResult) -> str:
-    """
-    Validates an optional category string against the allowed list.
-    An empty/None value is accepted. Returns the value as-is or empty string.
-    """
-    if not value or not isinstance(value, str) or not value.strip():
-        return ""
-    stripped = value.strip()
-    if stripped not in VALID_CATEGORIES:
-        result.add_error(
-            field_name,
-            f"'{stripped}' is not a recognised category. "
-            f"Valid options: {', '.join(VALID_CATEGORIES)} — or leave blank.",
-        )
-    return stripped
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -264,18 +243,15 @@ def validate_and_structure(
     result = ValidationResult()
 
     # ── Publication-level validation ──────────────────────────────────────────
-    author_list = _check_author_list(pub.get("Author_list"), result)
-    date        = _check_date(pub.get("Date"), result)
-    doi         = _check_doi(pub.get("DOI"), result)
-    title       = _check_required_string(pub.get("Title"),       "Title",       result)
-    based_on    = _check_required_string(pub.get("Based_on"),    "Based on",    result)
-    sample_type = _check_required_string(pub.get("Sample_type"), "Sample type", result)
-    sample_size = _check_non_negative_int(pub.get("Sample_size"), "Sample size", result, minimum=0)
 
-    # Optional publication-level strings
-    tissue   = _check_optional_string(pub.get("Tissue"))
-    array    = _check_optional_string(pub.get("Array"))
-    ancestry = _check_optional_string(pub.get("Ancestry"))
+    pub_cols: dict[str, Any] = {
+        "Title": _check_string(pub, "Title", result, required = True),
+        "Author_list": _check_author_list(pub.get("Author_list"), result),
+        "Contact": _check_contact(pub.get("Contact"), result),
+        "DOI": _check_doi(pub.get("DOI"), result),
+        "Journal": _check_string(pub, "Journal", result, required = False),
+        "Date": _check_date(pub.get("Date"), result),
+    }
 
     # ── MPS-level validation ──────────────────────────────────────────────────
     if not mps_list:
@@ -284,20 +260,28 @@ def validate_and_structure(
     cleaned_mps: list[dict[str, Any]] = []
 
     for i, mps in enumerate(mps_list, start=1):
-        prefix = f"MPS #{i}"
-
-        phenotype  = _check_required_string(mps.get("Phenotype"),            f"{prefix} — Phenotype",             result)
-        category   = _check_category(        mps.get("Category"),             f"{prefix} — Category",              result)
-        n_cpgs     = _check_non_negative_int( mps.get("n_CpGs"),              f"{prefix} — n CpGs",                result, minimum=3)
-        dev_period = _check_required_string( mps.get("Developmental_period"), f"{prefix} — Developmental period",  result)
-        method     = _check_required_string( mps.get("Method"),               f"{prefix} — Method",                result)
-
+        p = f"MPS #{i}"
+    
         cleaned_mps.append({
-            "Phenotype":            phenotype   or "",
-            "Category":             category,
-            "n CpGs":               n_cpgs,
-            "Developmental period": dev_period  or "",
-            "Method":               method      or "",
+            "Phenotype": _check_string(mps, "Phenotype", result, required = True, context = p),
+            "Category": _check_string(mps, "Category", result, required = True, context = p),
+            "N CpGs": _check_non_negative_int(mps.get("n CpGs"), 
+                        f"{p} — N CpGs", result, minimum=2),
+            "Sample size": _check_non_negative_int(mps.get("Sample size"), 
+                        f"{p} — Sample size", result, minimum=1),
+            "Array": _check_string(mps, "Array", result, required = True, context = p),
+            "Tissue": _check_string(mps, "Tissue", result, required = True, context = p),
+            "Developmental period": _check_string(mps, "Developmental period", result, 
+                        required = True, context = p),
+            "Ancestry": _check_string(mps, "Ancestry", result, required = False, context = p),
+            "Based on": _check_string(mps, "Based on", result, required = True, context = p),
+            "Reference": _check_string(mps, "Reference", result, required = False, context = p),
+            "Reference DOI": _check_doi(mps.get("Reference DOI"), result),
+            "Reference match": mps.get("Reference match") or [],
+            "Method": _check_string(mps, "Method", result, required = False, context = p),
+            "Performance metric": _check_string(mps, "Performance metric", result, required = False, context = p),
+            "Performance value": _check_string(mps, "Performance value", result, required = False, context = p),
+            "MPS link": _check_string(mps, "MPS link", result, required = False, context = p), 
         })
 
     # ── Abort if any errors were found ────────────────────────────────────────
@@ -305,18 +289,6 @@ def validate_and_structure(
         return result, None
 
     # ── Build output DataFrame ────────────────────────────────────────────────
-    pub_cols: dict[str, Any] = {
-        "Author_list": author_list,
-        "Date":        date,
-        "Title":       title,
-        "DOI":         doi,
-        "Based on":    based_on,
-        "Sample type": sample_type,
-        "Sample size": sample_size,
-        "Tissue":      tissue,
-        "Array":       array,
-        "Ancestry":    ancestry,
-    }
 
     df = pd.DataFrame([{**pub_cols, **mps} for mps in cleaned_mps])
 
