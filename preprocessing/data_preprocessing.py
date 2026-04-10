@@ -9,7 +9,7 @@
 
 import marimo
 
-__generated_with = "0.22.4"
+__generated_with = "0.23.0"
 app = marimo.App(width="medium")
 
 
@@ -320,6 +320,12 @@ def _(mo):
 
 
 @app.cell
+def _(mps_table):
+    mps_table['Based on'].value_counts()
+    return
+
+
+@app.cell
 def _(base_table, mps_table):
     targ_only = mps_table.loc[mps_table['Based on'] != 'Raw individual-level data',]
     print(targ_only.shape, base_table.shape)
@@ -546,8 +552,15 @@ def _(mo, mps_base_matched, mps_table, pub_table):
 
 
     # Review: add link to development paper 
+    agg_right = (
+        mps_base_matched_clean
+        .groupby(["Author", "Year", "Title", "Phenotype [application]"])["Reference"]
+        .apply(lambda x: "; ".join(sorted(set(x))))
+        .reset_index()
+    )
+
     mps_table_clean = mps_table.merge(
-        mps_base_matched_clean[["Author", "Year", "Title", "Phenotype [application]", "Reference"]],
+        agg_right,
         left_on=["Author", "Year", "Title", "Phenotype"],
         right_on=["Author", "Year", "Title", "Phenotype [application]"],
         how="left"
@@ -572,7 +585,8 @@ def _(mo, mps_base_matched, mps_table, pub_table):
                                  'Comparison', 'Missing_value_note', 'Covariates']
                                 ].rename(columns={'Phenotype': 'Phenotype(s)'})
 
-    mo.ui.tabs({"Pubs table": pub_table_clean, "MPS table": mps_table_clean, "MPS table (base-matched)": mps_base_matched_clean})
+    mo.ui.tabs({"Pubs table": pub_table_clean, "MPS table": mps_table_clean, 
+                "MPS table (base-matched)": mps_base_matched_clean})
     return mps_base_matched_clean, mps_table_clean, pub_table_clean
 
 
