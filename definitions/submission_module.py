@@ -68,7 +68,7 @@ def pub_block_ui(page_id = 'submit_page'):
                               placeholder="e.g. 10.1000/xyz123", width="100%"),
                 input_text_suggest(f"{page_id}_journal", label="Journal", 
                                    suggestions=obs_journals, 
-                                   placeholder="e.g. medRxiv, Journal of Epigenetics"),
+                                   placeholder="e.g. Eur J Hum Gen"),
                 ui.input_date(f"{page_id}_year", field_name("Publication date"),
                               value=None, # Defaults to today
                               min="2000-01-01", max=None, width="100%"),
@@ -90,7 +90,7 @@ def mps_block_ui(idx: int):
             ui.input_numeric("n_cpgs", field_name("N CpGs", required = True),
                              value=None, min=2, step=1),
             ui.input_numeric("sample_size", field_name("Sample size", required = True, 
-                             info="Internal validation sample size or total sample size (for train-test split)"),
+                             info="Total study sample size (train + test sample)"),
                              value=None, min=2, step=1),
             col_widths=[4, 4, 2, 2], style="align-items: stretch;"
         ),
@@ -110,13 +110,20 @@ def mps_block_ui(idx: int):
             input_text_suggest("tissue", label="Tissue", required = True,
                                suggestions=obs_tissues, 
                                placeholder="e.g. Whole blood"),
-            input_text_suggest("developmental_period", label="Developmental period", required = True,
-                               suggestions=["Birth", "Early childhood", "Mid childhood",
-                                            "Late childhood", "Adolescence"], 
-                               placeholder="e.g. median age [age range], Adolescence"),
+            ui.div(field_name("Age range (years)", required = True, 
+            info ="Minimum and Maximum age of the sample. If this is a birth sample, use min: 0 max: 0."),
+                   ui.layout_columns(
+                        ui.input_numeric("age_min", '', value=0, min=0, step=30),
+                        ui.input_numeric("age_max", '', value=10, min=0, step=30),
+                        col_widths=[6, 6], gap="5px"), style="margin-bottom: 0; padding-top: 4px; width: 100%;"
+            ),
+            # input_text_suggest("developmental_period", label="Developmental period", required = True,
+            #                    suggestions=["Birth", "Early childhood", "Mid childhood",
+            #                                 "Late childhood", "Adolescence"], 
+            #                    placeholder="e.g. median age [age range], Adolescence"),
             ui.input_text("ancestry", field_name("Ancestry"),
                           placeholder="e.g. European, Mixed"),
-            col_widths=[3, 2, 2, 3, 2], style="align-items: stretch;", gap="10px",   
+            col_widths=[4, 2, 2, 2, 2], style="align-items: stretch;", gap="10px",   
         ),
         ui.output_ui("dev_reference_block"),
         ui.layout_columns(
@@ -154,12 +161,13 @@ def mps_block_server(input, output, session):
             return None
         
         return ui.layout_columns(
-            ui.input_text("dev_reference", field_name("Reference (Development dataset)"),
+            ui.input_text("dev_reference", field_name("Reference (Source dataset)", 
+            info = 'The development / source / reference sample where weights were calculated.'),
                           placeholder="e.g. First Author (2026)", width="100%"),
             ui.input_text("dev_reference_doi", field_name("Reference DOI"),
                           placeholder="e.g. 10.1000/xyz123", width="100%"),
             ui.input_checkbox_group("dev_match", field_name("Matching:"),
-                                choices=["Array", "Tissue", "Developmental period", "Ancestry"],
+                                choices=["Array", "Tissue", "Age range", "Ancestry"],
                                 inline=True),
             col_widths=[4, 4, 4], style="align-items: stretch;")
 
@@ -172,7 +180,7 @@ def mps_block_server(input, output, session):
             "Sample size": input.sample_size(),
             "Array": input.array(),
             "Tissue": input.tissue(),
-            "Developmental period": input.developmental_period(),
+            "Developmental period": [input.age_min(), input.age_max()],
             "Ancestry": input.ancestry(),
             "Based on": input.based_on(),
             "Reference": input.dev_reference() if input.based_on() != "Raw individual-level data" else None,

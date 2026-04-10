@@ -89,7 +89,7 @@ def overview_page(page_id='overview_page'):
                                           title="Last update:", value_style="font-size: 26px"),
                             col_widths = [4, 2, 2, 2, 2]),
                          ui.markdown(
-                            "[*Methylation profile scores in early life: a systematic review and developmental risk atlas*]"\
+                            "[*Paediatric methylation profile scores: a systematic review and open-source atlas*]"\
                             "(http://dx.doi.org/10.2139/ssrn.5852502), but is meant as a collaborative, live resource.<br><br>"\
                             "On this page, you can ***search the atlas***, navigate to the other tabs to explore ***interactive visualizations*** of these "\
                             "data and to ***upload your MPS*** for others to find!"),
@@ -222,8 +222,8 @@ def submit_page(page_id="submit_page"):
         ui.markdown(
             "Fill in as many information as you can about the MPS(s) you have developed or "
             "applied to in a developmental context. The fields marked by **<span style='color:red;'>*</span>** are compulsory. "
-            "Once you are done, hit the **Submit for review** button. We will process your submission as soon as possible "
-            "and get back to you.<br>"
+            "<br>Once you are done, hit the **Submit for review** button. We will process your submission as soon as possible "
+            "and possibly get back to you. You can check the status of your submission [here](https://github.com/inDEPTHlab/DeMetRA-review/pulls).<br>"
             "Note: something is wrong or missing? Please open an [issue](https://github.com/inDEPTHlab/DeMetRA-review/issues) to let us know!"
         ),
         # ── Publication-level (filled once) ─────────────────────────────
